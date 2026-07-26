@@ -4,19 +4,17 @@ from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
-# 1. Defini 8 Pwen Kowòdone yon Kib nan espas 3D (X, Y, Z Matrices)
+# 1. Kowòdone Kib 3D
 vertices = (
     ( 1, -1, -1), ( 1,  1, -1), (-1,  1, -1), (-1, -1, -1),
     ( 1, -1,  1), ( 1,  1,  1), (-1, -1,  1), (-1,  1,  1)
 )
 
-# 2. Liy ki konekte pwen yo pou fòme bwat la
 edges = (
     (0,1), (0,3), (0,4), (2,1), (2,3), (2,7),
     (6,3), (6,4), (6,7), (5,1), (5,4), (5,7)
 )
 
-# 3. Koulè Neon Cyberpunk pou 6 fas kib la (RGB format)
 colors = (
     (0, 210, 255),  # Neon Cyan
     (220, 50, 50),  # Neon Wouj
@@ -26,13 +24,11 @@ colors = (
     (255, 0, 150)   # Hot Pink
 )
 
-# 4. Sifas (Faces) kib la pou l ka ranpli ak vrè koulè solid, pa sèlman fil liy
 surfaces = (
     (0,1,2,3), (3,2,7,6), (6,7,5,4), (4,5,1,0), (1,5,7,2), (4,0,3,6)
 )
 
 def Desine_Kib_3D():
-    # Desine fas yo ak gwo koulè solid k ap klere
     glBegin(GL_QUADS)
     for i, surface in enumerate(surfaces):
         glColor3fv(colors[i % len(colors)])
@@ -40,9 +36,8 @@ def Desine_Kib_3D():
             glVertex3fv(vertices[vertex])
     glEnd()
 
-    # Desine liy fil nwa yo sou bòb bwat la pou l parèt byen pwòp
     glBegin(GL_LINES)
-    glColor3fv((10, 10, 15)) # Koulè liy yo
+    glColor3fv((10, 10, 15))
     for edge in edges:
         for vertex in edge:
             glVertex3fv(vertices[vertex])
@@ -51,43 +46,62 @@ def Desine_Kib_3D():
 def main():
     pygame.init()
     LÈT, WOTÈ = 800, 600
-    # DOUBLEBUF ak OPENGL mande kòd la pou l kouri sou kat grafik la dirèkteman
     pygame.display.set_mode((LÈT, WOTÈ), DOUBLEBUF | OPENGL)
-    pygame.display.set_caption("NAYDER ENGINE v0.0.20 - Real 3D Renderer Core")
+    pygame.display.set_caption("NAYDER ENGINE v0.0.21 - 3D Input Camera Matrix")
     clock = pygame.time.Clock()
 
-    # Konfigirasyon Lantiy Kamera 3D a (Field of View: 45, Aspect Ratio, Perspective clipping)
     gluPerspective(45, (LÈT / WOTÈ), 0.1, 50.0)
     
-    # Deplase kamera a bak pa 5 mèt pou n ka wè tout kib la (Z axis movement)
-    glTranslatef(0.0, 0.0, -5.0)
+    # Variab Pozisyon Kamera 3D (X, Y, Z Axis)
+    cam_x = 0.0
+    cam_y = 0.0
+    cam_z = -5.0  # Kòmanse nan 5 mèt dèyè
 
     print("\n=======================================================")
-    print("    [NAYDER ENGINE v0.0.20] - VRÈ MATRIX GRAPHICS 3D")
+    print("    [NAYDER ENGINE v0.0.21] - 3D INPUT & CAMERA MATRIX")
     print("=======================================================")
-    print(" [*] Modil 5: Real 3D Window   -> ✅ DEBLOKE NÈT!")
-    print(" [*] Modil 6: Renderer Upgrade -> ✅ OPENGL PIPELINE ACTIVE")
+    print(" [*] Modil 4: Input System    -> ✅ UPGRADED TO 3D MATRIX")
+    print(" [*] Modil 5: 3D Camera Focus -> ✅ ACTIVE")
+    print("-------------------------------------------------------")
+    print(" KONTWÒL YON REYÈL (AKSYON KLAVYE):")
+    print("  -> Peze W / S pou Zoom In / Zoom Out Kamera a (Z-Axis)")
+    print("  -> Peze FLÈCH YO pou w deplase kib la sou kote (X/Y-Axis)")
     print("-------------------------------------------------------")
 
-    # Game Loop grafik la
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
 
-        # 5. MATRIS VIRE (3D Rotation Core System - vire sou 3 aks X, Y, Z anmenmtan)
+        # 2. SISTÈM KOUTE KLAVYE 3D (Real-Time Hardware Input Pipeline)
+        keys = pygame.key.get_pressed()
+        
+        # Jere Zoom Z-Axis
+        if keys[pygame.K_w]: cam_z += 0.1   # Pwoche pi pre
+        if keys[pygame.K_s]: cam_z -= 0.1   # Rale dèyè
+        
+        # Jere Deplasman X ak Y Axis
+        if keys[pygame.K_LEFT]:  cam_x += 0.05
+        if keys[pygame.K_RIGHT]: cam_x -= 0.05
+        if keys[pygame.K_UP]:    cam_y -= 0.05
+        if keys[pygame.K_DOWN]:  cam_y += 0.05
+
+        # Sove Matris la epi re-kalkile pozisyon an an tan reyèl
+        glLoadIdentity()
+        gluPerspective(45, (LÈT / WOTÈ), 0.1, 50.0)
+        glTranslatef(cam_x, cam_y, cam_z)
+
+        # Matris vire dousman nan background nan
         glRotatef(1, 1, 1, 0.5)
         
-        # Netwaye ekran an ak memwa pwofondè z-buffer a
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        glEnable(GL_DEPTH_TEST) # Anpeche fas ki dèyè yo parèt devan
+        glEnable(GL_DEPTH_TEST)
 
-        # Rele gwo fonksyon kreyasyon an
         Desine_Kib_3D()
 
         pygame.display.flip()
-        clock.tick(107) # Lock sou 107 FPS taktik motè a
+        clock.tick(107)
 
 if __name__ == "__main__":
     main()
