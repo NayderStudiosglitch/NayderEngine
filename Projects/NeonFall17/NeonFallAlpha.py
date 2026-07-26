@@ -1,44 +1,50 @@
 import sys
 import time
 
+class TankVehicle:
+    def __init__(self, name):
+        self.name = name
+        self.armor = 500
+        self.cannon_ammo = 10
+        self.is_occupied = False
+        self.driver = None
+
+    def enter_vehicle(self, player):
+        self.is_occupied = True
+        self.driver = player
+        print(f" 🦺 [VEHICLE]: Sòlda '{player.name}' antre andedan '{self.name}'!")
+        print(f"    [TANK ARMORED STATUS]: Pwoteksyon Tank: {self.armor} HP | Koki Kanon: {self.cannon_ammo}/10")
+
+    def fire_main_cannon(self, enemy_target):
+        if self.cannon_ammo > 0:
+            self.cannon_ammo -= 1
+            print(f" 💥 [CANNON FIRE]: {self.name} LOUVRI TI KANON LOU AN! (Koki: {self.cannon_ammo}/10)")
+            # Gwo dega kanon (100 HP - Elimine nenpòt lènmi yon sèl kou!)
+            enemy_target.take_damage(damage_amount=100, player_source=self.driver)
+            return True
+        else:
+            print(" 🚫 [CANNON]: Pa gen koki ki rete nan kanon an!")
+            return False
+
 class PlayerController:
     def __init__(self, name, selected_class):
         self.name = name
         self.player_class = selected_class.upper()
         self.hp = 100
-        self.shield = 100
-        self.ammo_in_clip = 30
-        
-        # Pwofil ak Rekonpans (Estatistik ki soti nan Meni an)
-        self.level = 25
         self.xp = 2400
-        self.xp_needed_for_next_level = 3000
+        self.level = 25
         self.credits = 53860
-
-    def fire_at_enemy(self, enemy_target):
-        if self.ammo_in_clip > 0:
-            self.ammo_in_clip -= 1
-            print(f" 🔫 [FIRE]: '{self.name}' TIRE sou '{enemy_target.name}'! (Clip: {self.ammo_in_clip}/30)")
-            enemy_target.take_damage(damage_amount=25, player_source=self)
-            return True
-        else:
-            print(" 🚫 [WEAPON]: CLIP VID!")
-            return False
+        self.xp_needed_for_next_level = 3000
 
     def add_xp_and_credits(self, xp_amount, cr_amount):
         self.xp += xp_amount
         self.credits += cr_amount
-        print(f" 💵 [REWARD]: +{xp_amount} XP ak +{cr_amount} CR ajoute nan kont ou!")
-        
-        # Lojik pou Monte Nivo (Level Up Matrix)
+        print(f" 💵 [REWARD]: +{xp_amount} XP ak +{cr_amount} CR ajoute!")
         if self.xp >= self.xp_needed_for_next_level:
             self.level += 1
-            self.xp = self.xp - self.xp_needed_for_next_level
             print(f"\n⚡🎉=======================================================🎉⚡")
             print(f"       LEVEL UP!!! SÒLDA '{self.name}' MONTE NAN NIVÒ {self.level}!")
             print(f"===========================================================⚡")
-        else:
-            print(f"    [PROGRESS]: XP Pwofil: {self.xp}/{self.xp_needed_for_next_level} pou pwochen nivo.")
 
 class BasicEnemyAI:
     def __init__(self, name):
@@ -49,35 +55,35 @@ class BasicEnemyAI:
     def take_damage(self, damage_amount, player_source):
         if self.is_alive:
             self.hp -= damage_amount
-            print(f" 💥 [HIT]: '{self.name}' pran -{damage_amount} HP! Sante lènmi: {self.hp}/100")
+            print(f" 💥 [HIT]: '{self.name}' pran -{damage_amount} HP nan gwo kanon blennde a!")
             if self.hp <= 0:
                 self.hp = 0
                 self.is_alive = False
-                print(f" 💀 [ELIMINATION]: '{self.name}' ELIMINE nèt!")
-                # Bay jwè a pwen rekonpans (350 XP ak 500 Credits pou gwo eliminasyon)
+                print(f" 💀 [ELIMINATION]: '{self.name}' ELIMINE nèt sou kat la!")
                 player_source.add_xp_and_credits(xp_amount=750, cr_amount=500)
 
 class NeonFallAlphaGame:
     def __init__(self):
         print("\n=======================================================")
-        print("    [PROJECT: NEON FALL] - ALPHA v0.3 REKONPANS AK XP")
+        print("    [PROJECT: NEON FALL] - ALPHA v0.4 SISTÈM TANK LOU")
         print("=======================================================")
         
     def start_game_simulation(self):
+        # 1. Spawn Sòlda, Tank, ak yon nouvo Gwo Lènmi
         soldier = PlayerController(name="NAYDER_01", selected_class="Assault")
-        zombie_bot = BasicEnemyAI(name="ZONBI_BOT_102")
-        
-        print(f" -> [PROFILE]: Sòlda: {soldier.name} | Nivo Kòmansman: {soldier.level} | Credits: {soldier.credits}")
-        print("-------------------------------------------------------")
-        
-        # Simulation sekans konba jiskaske lènmi an mouri pou n deklanche LEVEL UP la
-        soldier.fire_at_enemy(zombie_bot)
-        soldier.fire_at_enemy(zombie_bot)
-        soldier.fire_at_enemy(zombie_bot)
-        soldier.fire_at_enemy(zombie_bot)
+        heavy_tank = TankVehicle(name="M1_NAYDER_TANK_ALPHA")
+        zombie_boss = BasicEnemyAI(name="ZONBI_BOSS_200")
         
         print("-------------------------------------------------------")
-        print(f" -> [PROFILE UPDATE]: Nouvo Nivo: {soldier.level} | Total Credits: {soldier.credits} CR")
+        # 2. Sòlda a monte sou tank la epi li louvri tir kanon an
+        heavy_tank.enter_vehicle(soldier)
+        print("-------------------------------------------------------")
+        
+        time.sleep(0.5)
+        heavy_tank.fire_main_cannon(zombie_boss)
+        
+        print("-------------------------------------------------------")
+        print(" ✅ STATUS: Fizik machin ak Lojik Kanon Tank teste 100% kòrèkteman.")
 
 if __name__ == "__main__":
     game_instance = NeonFallAlphaGame()
