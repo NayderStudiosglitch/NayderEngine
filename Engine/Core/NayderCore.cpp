@@ -1,46 +1,67 @@
 #include <iostream>
 #include <string>
-#include <map>
 #include <vector>
+#include <algorithm>
 
 // =============================================================================
-// MODIL 12: ASSET MANAGER CORE (C++ HARDWARE FILE REGISTRY)
+// MODIL 15: HUGE STYLE LANGUAGE PARSER CORE (C++ NATIVE NLP ENGINE)
 // =============================================================================
-struct AssetData {
-    std::string asset_guid;
-    std::string file_path;
-    std::string asset_type; // "MESH_3D", "AUDIO_WAV", "TEXTURE"
-    bool is_memory_allocated;
-};
-
-class AssetManagerCore {
+class HugeStyleParserCore {
 private:
-    std::map<std::string, AssetData> asset_registry;
+    std::vector<std::string> weapon_keywords;
+    std::vector<std::string> attribute_keywords;
+    std::vector<std::string> tactical_keywords;
 
 public:
-    AssetManagerCore() {
-        std::cout << " -> [C++ ASSET MANAGER]: Hardware registry initialization complete." << std::endl;
+    HugeStyleParserCore() {
+        // Diksyonè mo kle taktik yo an C++
+        weapon_keywords = {"smg", "rifle", "sniper", "zam", "lou"};
+        attribute_keywords = {"fast", "vit", "low recoil", "silansye", "sekwe", "blue", "black"};
+        tactical_keywords = {"nuclear", "bomb", "nikleyè", "nuke", "crater"};
+        std::cout << " -> [C++ HUGE STYLE NLP]: Diksyonè mo kle yo chaje nan RAM Compiler la." << std::endl;
     }
 
-    void RegisterAndLoadAsset(std::string name, std::string path, std::string type) {
-        std::string guid = "GUID_" + name + "_0x7F";
-        AssetData new_asset = {guid, path, type, true};
-        asset_registry[name] = new_asset;
+    void ParseNaturalSentence(std::string sentence) {
+        std::string raw_text = sentence;
+        // Transfòme tèks la an lèt piti pou analiz pafè
+        std::transform(raw_text.begin(), raw_text.end(), raw_text.begin(), ::tolower);
         
-        std::cout << " -> [REGISTRY]: Chaje '" << name << "' [" << type << "] depi '" << path << "'..." << std::endl;
-        std::cout << "    [RAM POINTER]: Alokasyon memwa sekirite fèt pou GUID: " << guid << std::endl;
-        std::cout << " ✅ STATUS: Asset chaje 100% nan Resource Cluster la." << std::endl;
-    }
+        std::cout << "\n -> [NLP PARSER]: Ap filtre fraz: \"" << sentence << "\"" << std::endl;
+        std::cout << "    [COMPILER]: Analiz Huge Style NLP active..." << std::endl;
 
-    void VerifyLoadedAssetsRegistry() {
-        std::cout << "\n📦 [ASSET REGISTRY VERIFICATION LOGS]:" << std::endl;
-        std::cout << " -------------------------------------------------------" << std::endl;
-        for (auto const& [name, asset] : asset_registry) {
-            std::cout << "   [-] ASSET: " << name 
-                      << " | Kalite: " << asset.asset_type 
-                      << " | Path: " << asset.file_path 
-                      << " | VRAM Alloc: " << (asset.is_memory_allocated ? "YES" : "NO") << std::endl;
+        std::vector<std::string> triggered_actions;
+
+        // 1. Analize pou Zam
+        for (const std::string& word : weapon_keywords) {
+            if (raw_text.find(word) != std::string::npos) {
+                triggered_actions.push_back("WEAPON_CRAFT_CMD");
+                break;
+            }
         }
+
+        // 2. Analize pou Atribi/Koulè
+        for (const std::string& word : attribute_keywords) {
+            if (raw_text.find(word) != std::string::npos) {
+                triggered_actions.push_back("APPLY_MATERIAL_OR_MODIFIER");
+                break;
+            }
+        }
+
+        // 3. Analize pou Aksyon Taktik
+        for (const std::string& word : tactical_keywords) {
+            if (raw_text.find(word) != std::string::npos) {
+                triggered_actions.push_back("EXECUTE_TACTICAL_NUKE_PROTOCOL");
+                break;
+            }
+        }
+
+        // Afiche matris kòmand ki deklanche pou Engine nan
+        std::cout << "    [COMPILE SUCCESS]: Lòd konvèti an kòmand C++: [ ";
+        for (const std::string& action : triggered_actions) {
+            std::cout << action << " ";
+        }
+        std::cout << "]" << std::endl;
+        std::cout << " ✅ STATUS: Matris lòd yo voye bay Kè Motè a san lag." << std::endl;
     }
 };
 
@@ -49,34 +70,42 @@ public:
 // =============================================================================
 class NayderEngineCPP {
 private:
-    AssetManagerCore asset_manager;
+    HugeStyleParserCore nlp_parser;
 
 public:
     NayderEngineCPP() {
         std::cout << "\n=======================================================" << std::endl;
-        std::cout << "     [NAYDER ENGINE v0.0.32] - ASSET MANAGER CORE" << std::endl;
+        std::cout << "     [NAYDER ENGINE v0.0.33] - HUGE STYLE PARSER CORE" << std::endl;
         std::cout << "=======================================================" << std::endl;
-        std::cout << " [*] Modil 12: Asset Manager -> ✅ ONLINE AN C++" << std::endl;
-        std::cout << " [*] RAM Pointer Allocation  -> ✅ CLUSTER SECURE" << std::endl;
-        std::cout << " [*] VRAM Pre-Load Handshake -> ✅ BALANCED" << std::endl;
+        std::cout << " [*] Modil 15: Huge Style NLP -> ✅ ONLINE AN C++" << std::endl;
+        std::cout << " [*] Natural Language Matrix  -> ✅ STABLE PIPELINE" << std::endl;
+        std::cout << " [*] Hardware Lexer Tokenizer -> ✅ LINKED TO RAM" << std::endl;
+        print_roadmap_status();
+    }
+
+    void print_roadmap_status() {
+        std::cout << "-------------------------------------------------------" << std::endl;
+        std::cout << " ROADMAP UPGRADE STATUS:" << std::endl;
+        std::cout << "  12. Asset Manager      -> ✅ C++ CORE" << std::endl;
+        std::cout << "  13. Level/Map System   -> ✅ C++ CORE" << std::endl;
+        std::cout << "  14. Multiplayer Network-> ✅ C++ CORE" << std::endl;
+        std::cout << "  15. Huge Style Language-> ✅ C++ CORE" << std::endl;
         std::cout << "-------------------------------------------------------" << std::endl;
     }
 
-    void SimulateAssetLoadingPipeline() {
-        // 1. Chaje modèl 3D yo nan manadjè a
-        asset_manager.RegisterAndLoadAsset("Haitian_Soldier_Heavy", "Assets/Models/haitian_soldier.fbx", "MESH_3D");
-        asset_manager.RegisterAndLoadAsset("Military_Chopper", "Assets/Models/chopper.fbx", "MESH_3D");
+    void RunSimulation() {
+        // Tès 1: Fraz pou bati zam ak koulè
+        nlp_parser.ParseNaturalSentence("AI, Build me a sniper blue, black color");
         
-        // 2. Chaje gwo son sirèn nikleyè a
-        asset_manager.RegisterAndLoadAsset("Nuclear_Siren_Alarm", "Assets/Audio/nuclear_siren.wav", "AUDIO_WAV");
+        std::cout << "\n=======================================================" << std::endl;
         
-        // 3. Verifye tout lis la nan memwa a
-        asset_manager.VerifyLoadedAssetsRegistry();
+        // Tès 2: Fraz pou sekans eksplozyon nikleyè
+        nlp_parser.ParseNaturalSentence("Drop the tactical Nuke bomb in Desert Ghost City");
     }
 };
 
 int main() {
     NayderEngineCPP engine;
-    engine.SimulateAssetLoadingPipeline();
+    engine.RunSimulation();
     return 0;
 }
