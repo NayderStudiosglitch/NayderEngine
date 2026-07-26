@@ -1,102 +1,96 @@
 #include <iostream>
 #include <string>
 #include <map>
-#include <vector>
 #include <algorithm>
 
-// Estrikti pou pwofil jwè a
 struct PlayerProfile {
     std::string name;
-    std::string nationality; // "HT", "USA", "ZH", "KP", elatriye
+    int level;
+    int weapons_unlocked;
+    int ai_build_count_today;
+    std::string language_code; // "ht", "en", elatriye
 };
 
-class NayderIntelligentLocalization {
+class NayderAdvancedGameRules {
 private:
-    std::map<std::string, std::string> lang_names;
-    std::map<std::string, std::string> npc_voices;
+    std::map<std::string, std::string> npc_limit_messages;
 
 public:
-    NayderIntelligentLocalization() {
-        // Map Kòd ak Non Lang yo
-        lang_names["ht"] = "Haitian Creole (Kreyòl Ayisyen)";
-        lang_names["en"] = "English (US/UK)";
-        lang_names["fr"] = "French (Français)";
-        lang_names["es"] = "Spanish (Español)";
-        lang_names["pt"] = "Portuguese (Português)";
-        lang_names["ru"] = "Russian (Русский)";
-        lang_names["zh"] = "Chinese (中文)";
-        lang_names["kp"] = "North Korean (조선말)";
-
-        // Tradiksyon vwa NPC yo pou chak nasyon
-        npc_voices["ht"] = "Sòlda, lènmi yo ap pwoche nan Ruins yo! Pare zam ou!";
-        npc_voices["en"] = "Soldier, enemies are closing in on the Ruins! Ready your weapon!";
-        npc_voices["zh"] = "士兵，敌人正向废墟逼近！准备好你的武器！";
-        npc_voices["kp"] = "전사여, 원쑤들이 기지로 몰려온다! 무기를 잡으라!";
+    NayderAdvancedGameRules() {
+        // Tradiksyon mesaj blokus la pou NPC a nan lang natif natal yo
+        npc_limit_messages["ht"] = "Hé zanmi, ou rive nan limit ou pou jodi a! Eseye ankò pita, demen, oswa nan 4 jou.";
+        npc_limit_messages["en"] = "Hey friend, you reached your limit today! Try again later, tomorrow, or in 4 days.";
+        npc_limit_messages["zh"] = "嘿朋友，你今天的次数已达上限！请稍后再试、明天或4天后再试。";
+        npc_limit_messages["kp"] = "동무여, 오늘의 한계를 초과하였다! 나중에, 내일, 혹은 4일후에 다시 시도하라.";
     }
 
-    void SortBuildWeaponMenu(std::string nationality) {
-        std::string primary_code = "en"; // Default
+    void CheckPlayerLevelProgression(PlayerProfile& player) {
+        std::cout << "\n📈 [PROGRESSION SYSTEM]: Ap verifye nivo '" << player.name << "' (Max: 200)..." << std::endl;
         
-        // Detekte ki lang ki dwe premye selon nasyon an
-        if (nationality == "HT") primary_code = "ht";
-        else if (nationality == "USA") primary_code = "en";
-        else if (nationality == "ZH") primary_code = "zh";
-        else if (nationality == "KP") primary_code = "kp";
-
-        std::cout << "\n🛠️  [BUILD WEAPON UI SORTING] - Nasyonalite detekte: " << nationality << std::endl;
-        std::cout << " 🔥 PRIYORITE 1: " << lang_names[primary_code] << " ap parèt an premye nèt!" << std::endl;
-        std::cout << " -------------------------------------------------------" << std::endl;
-        std::cout << " > LÒT LANG KI DISPONIB ANBA L (6 LANG RESE YO):" << std::endl;
-
-        // Afiche 6 lòt lang yo anba dousman san repete premye a
-        for (auto const& [code, name] : lang_names) {
-            if (code != primary_code) {
-                std::cout << "   [-] " << name << std::endl;
-            }
+        if (player.level >= 60) {
+            player.weapons_unlocked = 60;
+            std::cout << " 🎉 [LEVEL 60 REACHED]: Tout 60 zam yo debloke otomatikman nan Loadout la! (" << player.weapons_unlocked << "/60 Weapons Active)" << std::endl;
+        } else {
+            std::cout << "    [STATUS]: Nivo " << player.level << "/200. Kontinye jwe pou w rive nan Level 60 pou debloke tout zam yo." << std::endl;
         }
     }
 
-    void DynamicNPCSpeech(PlayerProfile player) {
-        std::string lang_code = "en"; // Default
+    void RequestAIWeaponBuild(PlayerProfile& player, std::string weapon_request) {
+        std::cout << "\n🛠️  [AI BUILD REQUEST]: Mande bati: \"" << weapon_request << "\"" << std::endl;
         
-        // Adaptasyon lang NPC a an tan reyèl selon jwè a
-        if (player.nationality == "HT") lang_code = "ht";
-        else if (player.nationality == "USA") lang_code = "en";
-        else if (player.nationality == "ZH") lang_code = "zh";
-        else if (player.nationality == "KP") lang_code = "kp";
+        // Ogmante kantite kreyasyon yo
+        player.ai_build_count_today++;
+        std::cout << "    [COUNTER]: Kreyasyon jodi a: " << player.ai_build_count_today << "/3 fwa." << std::endl;
 
-        std::cout << "\n🗣️  [NPC DYNAMIC VOICE CHAT]: Jwè '" << player.name << "' gen nasyonalite " << player.nationality << std::endl;
-        std::cout << " 🤖 [NPC AI VOICE]: \"" << npc_voices[lang_code] << "\"" << std::endl;
+        // Si se 4tyèm fwa a, blokus deklanche
+        if (player.ai_build_count_today > 3) {
+            std::cout << "\n🚫 [AI LOCKOUT ACTIVATED]: Limit kreyasyon an depase!" << std::endl;
+            
+            // SIMULASYON ANIMASYON BOUCH NPC (Lipsync Bone Matrix)
+            std::cout << " 🎭 [LIPSYNC ENGINE]: Activating facial skeletal joints for NPC model..." << std::endl;
+            std::cout << "    [BOUCH ANIMATION]: Open/Close matrix calculating bone weight for speech tracking." << std::endl;
+            
+            // NPC a pale nan lang pa moun nan dirèkteman
+            std::string msg = npc_limit_messages[player.language_code];
+            if (msg.empty()) msg = npc_limit_messages["en"]; // Fallback on English
+            
+            std::cout << " 🤖 [NPC AI TALKING]: \"" << msg << "\"" << std::endl;
+        } else {
+            std::cout << " ✅ [AI SUCCESS]: Zam nan bati epi li pare nan VRAM." << std::endl;
+        }
     }
 };
 
 class NayderEngineCPP {
 private:
-    NayderIntelligentLocalization intel_local;
+    NayderAdvancedGameRules rules_engine;
 
 public:
     NayderEngineCPP() {
         std::cout << "\n=======================================================" << std::endl;
-        std::cout << "     [NAYDER ENGINE v0.0.27] - INTENTIONAL AI LOCALIZATION" << std::endl;
+        std::cout << "     [NAYDER ENGINE v0.0.28] - GAME RULES & LIPSYNC CORE" << std::endl;
         std::cout << "=======================================================" << std::endl;
-        std::cout << " [*] Context IP Detection -> ✅ ONLINE" << std::endl;
-        std::cout << " [*] Dynamic UI Sorting   -> ✅ GRADIENT ACTIVE" << std::endl;
-        std::cout << " [*] Adaptive NPC Voice   -> ✅ SATELLITE MATRIX SYNCED" << std::endl;
+        std::cout << " [*] Level 200 Ceiling   -> ✅ CALIBRATED" << std::endl;
+        std::cout << " [*] AI Usage Throttle   -> ✅ SAFETY HARDWARE LOCK ACTIVE" << std::endl;
+        std::cout << " [*] Lipsync Bone Matrix -> ✅ COMPILING VIS_EME SHADERS" << std::endl;
         std::cout << "-------------------------------------------------------" << std::endl;
     }
 
     void RunSimulation() {
-        // TÈS 1: Jwè ki soti AYITI (HT)
-        PlayerProfile player1 = {"Nayder_Haiti_01", "HT"};
-        intel_local.SortBuildWeaponMenu(player1.nationality);
-        intel_local.DynamicNPCSpeech(player1);
+        // Kreye yon jwè tès ki nan Level 60 epi ki pale Kreyòl (HT)
+        PlayerProfile my_player = {"Nayder_Dev_01", 60, 0, 0, "ht"};
         
-        std::cout << "\n=======================================================" << std::endl;
+        // 1. Tcheke nivo a pou debloke 60 zam yo
+        rules_engine.CheckPlayerLevelProgression(my_player);
+        std::cout << "-------------------------------------------------------" << std::endl;
 
-        // TÈS 2: Jwè ki soti USA
-        PlayerProfile player2 = {"John_USA_99", "USA"};
-        intel_local.SortBuildWeaponMenu(player2.nationality);
-        intel_local.DynamicNPCSpeech(player2);
+        // 2. Jwè a mande bati zam 1ye fwa, 2yèm fwa, 3yèm fwa (Mache pafè)
+        rules_engine.RequestAIWeaponBuild(my_player, "Build me a fast SMG");
+        rules_engine.RequestAIWeaponBuild(my_player, "Build me a sniper blue, black color");
+        rules_engine.RequestAIWeaponBuild(my_player, "Build me a shotgun");
+        
+        // 3. 4tyèm fwa! Blokus la deklanche epi NPC a ap kòmanse bouje bouch li an Kreyòl!
+        rules_engine.RequestAIWeaponBuild(my_player, "Build me another rifle");
     }
 };
 
