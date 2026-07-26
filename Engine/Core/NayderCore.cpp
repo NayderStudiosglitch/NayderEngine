@@ -1,104 +1,98 @@
 #include <iostream>
-#include <vector>
 #include <string>
 #include <map>
 #include <algorithm>
-#include <chrono>
-#include <thread>
 
 // =============================================================================
-// MODIL 10: ADVANCED AI WEAPON DESIGN SYSTEM (Huge Style NLP an C++)
+// MODIL: MULTI-LANGUAGE LOCALIZATION CORE (8 LANGS MATRIX)
 // =============================================================================
-struct CustomWeaponDesign {
-    std::string weapon_type;
-    std::string primary_color;
-    std::string secondary_color;
-    std::string texture_style;
-    bool is_generated;
-};
+class NayderLocalizationSystem {
+private:
+    // Diksyonè 2D k ap kenbe tout tradiksyon yo pou tout 8 lang yo nèt
+    std::map<std::string, std::map<std::string, std::string>> language_matrix;
 
-class NayderWeaponAIController {
 public:
-    CustomWeaponDesign ProcessPlayerDesignRequest(std::string raw_input) {
-        // Transfòme tèks la an lèt piti pou analiz pi fasil
-        std::transform(raw_input.begin(), raw_input.end(), raw_input.begin(), ::tolower);
-        
-        CustomWeaponDesign new_design = {"Standard_Rifle", "Default_Grey", "Default_Grey", "Standard_Matte", false};
-        
-        std::cout << "\n -> [🤖 AI NLP PARSER]: Ap analize fraz jwè a: \"" << raw_input << "\"" << std::endl;
-        std::cout << "    [AI THINKING]: Chèche modèl zam ak palèt koulè nan diksyonè Huge Style..." << std::endl;
+    NayderLocalizationSystem() {
+        // 1. HAITIAN CREOLE
+        language_matrix["ht"]["nuke_ready"] = "ALÈT NIKLEYÈ: Bonm Nikleyè a pare pou l detwi tout lènmi!";
+        language_matrix["ht"]["welcome"] = "Byenveni sòlda nan NAYDER ENGINE. Pwogram nan sou li.";
 
-        // 1. Detekte Kalite Zam
-        if (raw_input.find("sniper") != std::string::npos) {
-            new_design.weapon_type = "Tactical_Sniper_Rifle";
-        } else if (raw_input.find("smg") != std::string::npos) {
-            new_design.weapon_type = "Neon_Hyper_SMG";
-        }
+        // 2. ENGLISH
+        language_matrix["en"]["nuke_ready"] = "NUCLEAR ALERT: Tactical Nuke is ready to destroy all enemies!";
+        language_matrix["en"]["welcome"] = "Welcome soldier to NAYDER ENGINE. Core systems online.";
 
-        // 2. Detekte Koulè yo Dinamikman
-        if (raw_input.find("blue") != std::string::npos) {
-            new_design.primary_color = "Deep_Electric_Blue_Neon";
-        }
-        if (raw_input.find("black") != std::string::npos) {
-            new_design.secondary_color = "Solid_Carbon_Black_Matte";
-        }
+        // 3. FRENCH
+        language_matrix["fr"]["nuke_ready"] = "ALERTE NUCLÉAIRE: La bombe nucléaire est prête à tout détruire!";
+        language_matrix["fr"]["welcome"] = "Bienvenue soldat dans NAYDER ENGINE. Systèmes en ligne.";
 
-        // 3. Kalkile Bèl Stil la (Beautiful Design Layering)
-        new_design.texture_style = "Cyberpunk_Metallic_Gradient_Glow";
-        new_design.is_generated = true;
+        // 4. SPANISH
+        language_matrix["es"]["nuke_ready"] = "ALERTA NUCLEAR: ¡La bomba nuclear está lista para destruir todo!";
+        language_matrix["es"]["welcome"] = "Bienvenido soldado a NAYDER ENGINE. Sistemas en línea.";
 
-        return new_design;
+        // 5. PORTUGUESE
+        language_matrix["pt"]["nuke_ready"] = "ALERTA NUCLEAR: A bomba nuclear está pronta para destruir tudo!";
+        language_matrix["pt"]["welcome"] = "Bem-vindo soldado ao NAYDER ENGINE. Sistemas online.";
+
+        // 6. RUSSIAN
+        language_matrix["ru"]["nuke_ready"] = "ЯДЕРНАЯ ТРЕВОГА: Тактическая ядерная бомба готова к детонации!";
+        language_matrix["ru"]["welcome"] = "Добро пожаловать, солдат, в NAYDER ENGINE. Системы активны.";
+
+        // 7. CHINESE
+        language_matrix["zh"]["nuke_ready"] = "核警报：战术核弹已准备就绪，即将摧毁所有敌人！";
+        language_matrix["zh"]["welcome"] = "欢迎士兵来到 NAYDER 引擎。核心系统已上线。";
+
+        // 8. NORTH KOREAN (Chosŏn-gŏ Tonal Style)
+        language_matrix["kp"]["nuke_ready"] = "핵경보: 전술핵탄이 모든 원쑤들을 소멸할 준비가 되였습니다!";
+        language_matrix["kp"]["welcome"] = "전사여, NAYDER 기지에 들어선것을 환영한다. 체계 가동.";
     }
 
-    void SendDesignToPlayerVRAM(CustomWeaponDesign design, std::string player_name) {
-        if (design.is_generated) {
-            std::cout << "\n🎨✨=======================================================✨🎨" << std::endl;
-            std::cout << "        [NAYDER AI]: BEAUTIFUL CUSTOM DESIGN GENERATED!" << std::endl;
-            std::cout << "===========================================================🎨" << std::endl;
-            std::cout << " -> SÈTIFIKAT: Voye nouvo fichye konsepsyon bay sòlda '" << player_name << "'..." << std::endl;
-            std::cout << " -> ZAM BATI:   " << design.weapon_type << " [C++ Mesh Joint Linked]" << std::endl;
-            std::cout << " -> KOULÈ 1:    " << design.primary_color << " (Applied to Body & Scope)" << std::endl;
-            std::cout << " -> KOULÈ 2:    " << design.secondary_color << " (Applied to Grip & Magazine)" << std::endl;
-            std::cout << " -> STIL REND:  " << design.texture_style << " [Ray-Tracing Reflection Enabled]" << std::endl;
-            std::cout << " ✅ STATUS: Bèl konsepsyon zam nan chaje 100% nan pwofil jwè a!" << std::endl;
-            std::cout << "===========================================================" << std::endl;
+    void DisplayTranslatedMessage(std::string lang_code, std::string message_key) {
+        // Tcheke si lang lan ak mo a egziste nan matris motè a
+        if (language_matrix.find(lang_code) != language_matrix.end() && 
+            language_matrix[lang_code].find(message_key) != language_matrix[lang_code].end()) {
+            
+            std::cout << " -> [" << lang_code << " LOGS]: " << language_matrix[lang_code][message_key] << std::endl;
+        } else {
+            std::cout << " ⚠️ Error: Language code or key not found in localization engine." << std::endl;
         }
     }
 };
 
-// Lòt sistèm de baz yo pou motè a ka kouri
+// =============================================================================
+// ENGINE RUNTIME SETUP
+// =============================================================================
 class NayderEngineCPP {
 private:
-    int target_fps;
-    NayderWeaponAIController weapon_ai;
+    NayderLocalizationSystem localization;
 
 public:
     NayderEngineCPP() {
-        target_fps = 107;
         std::cout << "\n=======================================================" << std::endl;
-        std::cout << "     [NAYDER ENGINE v0.0.25] - AI DESIGN ENGINE CORE" << std::endl;
+        std::cout << "     [NAYDER ENGINE v0.0.26] - 8 LANGUAGES SYSTEM CORE" << std::endl;
         std::cout << "=======================================================" << std::endl;
-        std::cout << " [*] Modil 10: AI Brain Engine  -> ✅ UPGRADED WITH TEXTURE LOGIC" << std::endl;
-        std::cout << " [*] Huge Style NLP Compiler    -> ✅ ACTIVE (C++ Level)" << std::endl;
-        std::cout << " [*] Shaders & Material Mapping -> ✅ BOUND TO DESIGN CORE" << std::endl;
+        std::cout << " [*] Global Localization -> ✅ 8 INTERNATIONAL LANGUAGES ONLINE" << std::endl;
+        std::cout << " [*] Core Dictionary     -> ✅ STABLE STRING MATRIX LINKED" << std::endl;
         std::cout << "-------------------------------------------------------" << std::endl;
     }
 
-    void SimulatePlayerAction() {
-        // Simulation kote player a tape lòd Huge Style la ak men l
-        std::string command_from_player = "Build me a sniper blue, black color";
+    void TestAllLanguages() {
+        std::cout << " -> [LOCALIZATION ENGINE]: Ap verifye apèl sistèm nan tout 8 lang yo:" << std::endl;
+        std::cout << "-------------------------------------------------------" << std::endl;
         
-        // AI a trete lòd la epi li bati bèl konsepsyon an
-        CustomWeaponDesign custom_gun = weapon_ai.ProcessPlayerDesignRequest(command_from_player);
-        
-        // Voye bèl zam nan bay jwè a
-        std::this_thread::sleep_for(std::chrono::milliseconds(500)); // Simulation ti tan kalkil AI a
-        weapon_ai.SendDesignToPlayerVRAM(custom_gun, "NAYDER_01");
+        // Kouri tradiksyon mesaj Alèt Nikleyè a nan tout 8 lang yo nèt ale!
+        localization.DisplayTranslatedMessage("ht", "nuke_ready");
+        localization.DisplayTranslatedMessage("en", "nuke_ready");
+        localization.DisplayTranslatedMessage("fr", "nuke_ready");
+        localization.DisplayTranslatedMessage("es", "nuke_ready");
+        localization.DisplayTranslatedMessage("pt", "nuke_ready");
+        localization.DisplayTranslatedMessage("ru", "nuke_ready");
+        localization.DisplayTranslatedMessage("zh", "nuke_ready");
+        localization.DisplayTranslatedMessage("kp", "nuke_ready");
     }
 };
 
 int main() {
     NayderEngineCPP engine;
-    engine.SimulatePlayerAction();
+    engine.TestAllLanguages();
     return 0;
 }
