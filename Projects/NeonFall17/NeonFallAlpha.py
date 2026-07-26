@@ -1,63 +1,61 @@
 import sys
 import time
+import random
 
-class WeatherSystem:
-    def __init__(self):
-        self.time_of_day = "DAY"  # Ka chanje ant: DAY, DUSK, NIGHT
-        self.current_hazard = "CLEAR"  # Ka chanje ant: CLEAR, RAD_STORM
-        self.visibility_percentage = 100
-
-    def set_time_of_day(self, new_time):
-        self.time_of_day = new_time.upper()
-        if self.time_of_day == "NIGHT":
-            self.visibility_percentage = 40
-            print(f" 🌙 [ENVIRONMENT]: Sik lannwit deklanche. Syèl la tounen Cyberpunk Dark Purple.")
-            print(f"    [GPU RENDER]: Limen tout limyè neon yo ak gwo rann chaj VRAM.")
-        else:
-            self.visibility_percentage = 100
-            print(f" ☀️ [ENVIRONMENT]: Solèy leve. Vizibilite retounen sou 100%.")
-
-    def trigger_radiation_storm(self, player_target):
-        self.current_hazard = "RAD_STORM"
-        self.visibility_percentage = 20
-        print(f"\n🚨 ⛈️ [WEATHER HAZARD]: TANPÈT RADYO-AKTIF DEKLANCHE!")
-        print(f"    [EFFECT]: Vizibilite desann sou {self.visibility_percentage}%. Lafimen volumetrik vèt anvayi vil la.")
-        
-        # Dega tanpèt la sou jwè a
-        print(f"    [HAZARD DAMAGE]: Radyasyon ap aji sou '{player_target.name}'...")
-        player_target.hp -= 15
-        print(f" 💥 [HIT]: '{player_target.name}' pran -15 HP nan radyasyon! Sante sòlda: {player_target.hp}/100")
-
-class PlayerController:
-    def __init__(self, name):
+class DestructibleStructure:
+    def __init__(self, name, integrity_points):
         self.name = name
-        self.hp = 100
-        self.level = 25
+        self.integrity = integrity_points
+        self.is_destroyed = False
+
+    def receive_heavy_impact(self, damage_amount):
+        if self.is_destroyed:
+            return
+            
+        self.integrity -= damage_amount
+        print(f" 🧱 [STRUCTURE IMPACT]: '{self.name}' frape ak -{damage_amount} fòs fizik!")
+        
+        if self.integrity <= 0:
+            self.integrity = 0
+            self.is_destroyed = True
+            # Simulate moso debri yo k ap vole (Physics Fracture Vector Simulation)
+            debri_count = random.randint(12, 25)
+            print(f"\n💥💥 [PHYSICS FRACTURE]: '{self.name}' KRAZE NÈT AN MÈT PYÈS!")
+            print(f"    -> NAYDER ENGINE (C++): Matrix fracture split completed.")
+            print(f"    -> PARTICLES: {debri_count} moso debri ak gwo nwaj pousyè deklanche nan VRAM.")
+        else:
+            # Afiche nivo domaj la
+            print(f"    [DAMAGE STATE]: '{self.name}' fann! Rezistans ki rete: {self.identity_check()}%")
+
+    def identity_check(self):
+        return int((self.integrity / 200) * 100) if self.integrity > 0 else 0
 
 class NeonFallAlphaGame:
     def __init__(self):
         print("\n=======================================================")
-        print("    [PROJECT: NEON FALL] - ALPHA v0.5 METEO AK JOU/LANNWIT")
+        print("    [PROJECT: NEON FALL] - ALPHA v0.6 DESTRÌKSYON MAP")
         print("=======================================================")
-        self.weather = WeatherSystem()
         
     def start_game_simulation(self):
-        soldier = PlayerController(name="NAYDER_01")
+        # Spawn yon gwo miray blennde nan zòn vil la
+        city_wall = DestructibleStructure(name="MILITARY_BARRICADE_WALL_01", integrity_points=200)
         
-        print(f" -> [SPAWN]: Jwè '{soldier.name}' parèt sou kat 'Desert Ghost City'.")
+        print(f" -> [SPAWN]: '{city_wall.name}' plase sou kat la kòm objè fizik destriktib.")
         print("-------------------------------------------------------")
         
-        # 1. Tès Simulation Sik Lannwit (Aksyon!)
+        # 1. Premye kout zam ki fann miray la
         time.sleep(0.5)
-        self.weather.set_time_of_day("NIGHT")
+        print("[ACTION]: Yon jwè tire sou miray la ak yon zam lou...")
+        city_wall.receive_heavy_impact(damage_amount=75)
         
         print("-------------------------------------------------------")
-        # 2. Tès Simulation Tanpèt Radyo-aktif k ap blese jwè a
+        # 2. Dezyèm gwo enpak (Koki Tank) k ap eksploze miray la nèt ale!
         time.sleep(0.5)
-        self.weather.trigger_radiation_storm(soldier)
+        print("[ACTION]: Gwo kanon Tank lan tire yon koki dirèkteman sou miray la...")
+        city_wall.receive_heavy_impact(damage_amount=150)
         
         print("-------------------------------------------------------")
-        print(" ✅ STATUS: Sistèm Dinamik Meteo ak Anbyans teste 100% kòrèkteman.")
+        print(" ✅ STATUS: Sistèm Fracture ak Destriksyon Debri teste 100% kòrèkteman.")
 
 if __name__ == "__main__":
     game_instance = NeonFallAlphaGame()
