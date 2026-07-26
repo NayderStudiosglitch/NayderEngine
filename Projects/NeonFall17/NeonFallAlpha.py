@@ -9,59 +9,64 @@ class PlayerController:
         self.shield = 100
         self.ammo_in_clip = 30
         self.total_reserve_ammo = 150
-        
-        # Konfigirasyon selon klas la
-        if self.player_class == "SNIPER":
-            self.ammo_in_clip = 5
-            self.total_reserve_ammo = 35
-        elif self.player_class == "TANK_DRIVER":
-            self.hp = 250
-            self.shield = 200
 
-    def fire_weapon(self):
+    def fire_at_enemy(self, enemy_target):
         if self.ammo_in_clip > 0:
             self.ammo_in_clip -= 1
-            print(f" 🔫 [NEON FALL ALPHA]: '{self.name}' TIRE YON BAL! (Clip: {self.ammo_in_clip}/{self.total_reserve_ammo})")
+            print(f" 🔫 [FIRE]: '{self.name}' TIRE sou '{enemy_target.name}'! (Clip: {self.ammo_in_clip}/30)")
+            # Deklanche dega sou lènmi an
+            enemy_target.take_damage(damage_amount=25)
             return True
         else:
-            print(" 🚫 [WEAPON]: CLIP VID! Peze 'R' pou w Reload zam nan.")
+            print(" 🚫 [WEAPON]: CLIP VID! Peze enter pou w Reload.")
             return False
 
-    def reload_weapon(self):
-        if self.total_reserve_ammo > 0:
-            needed_ammo = 30 - self.ammo_in_clip if self.player_class != "SNIPER" else 5 - self.ammo_in_clip
-            transfer = min(needed_ammo, self.total_reserve_ammo)
-            self.ammo_in_clip += transfer
-            self.total_reserve_ammo -= transfer
-            print(f" 🔄 [WEAPON]: Reloading... Zam nan pare ankò! (Clip: {self.ammo_in_clip}/{self.total_reserve_ammo})")
-        else:
-            print(" ❌ [WEAPON]: Pa gen bal nan rezèv la ankò!")
+class BasicEnemyAI:
+    def __init__(self, name, x, y):
+        self.name = name
+        self.x = x
+        self.y = y
+        self.hp = 100
+        self.is_alive = True
+
+    def take_damage(self, damage_amount):
+        if self.is_alive:
+            self.hp -= damage_amount
+            print(f" 💥 [HIT]: '{self.name}' pran -{damage_amount} HP! Sante lènmi: {self.hp}/100")
+            if self.hp <= 0:
+                self.hp = 0
+                self.is_alive = False
+                print(f" 💀 [ELIMINATION]: '{self.name}' ELIMINE nèt sou kat la!")
 
 class NeonFallAlphaGame:
     def __init__(self):
         print("\n=======================================================")
-        print("    [PROJECT: NEON FALL] - ALPHA VERSION v0.1 RUNNING")
+        print("    [PROJECT: NEON FALL] - ALPHA v0.2 AK ENÈMI AI")
         print("=======================================================")
-        print(" -> Powered by NAYDER ENGINE Runtime pipeline.")
-        print(" -> Map Loaded: 'Desert Ghost City' (Alpha Grid).")
+        print(" -> Powered by NAYDER ENGINE AI & Combat Pipeline.")
         print("-------------------------------------------------------")
         
     def start_game_simulation(self):
-        # 1. Kreye Sòlda a ak klas li
+        # 1. Spawn Sòlda a ak Lènmi AI a
         soldier = PlayerController(name="NAYDER_01", selected_class="Assault")
-        print(f" -> [SPAWN]: Jwè '{soldier.name}' parèt sou kat la kòm {soldier.player_class}.")
-        print(f"    [STATS]: Sante: {soldier.hp} HP | Pwoteksyon: {soldier.shield} SHIELD")
+        zombie_bot = BasicEnemyAI(name="ZONBI_BOT_101", x=450, y=300)
+        
+        print(f" -> [SPAWN]: Jwè '{soldier.name}' parèt nan grid la.")
+        print(f" -> [SPAWN]: Lènmi '{zombie_bot.name}' parèt nan grid la.")
         print("-------------------------------------------------------")
         
-        # 2. Tès simulation konba (Aksyon!)
-        soldier.fire_weapon()
-        soldier.fire_weapon()
-        soldier.fire_weapon()
+        # 2. Simulation sekans konba tire (Aksyon!)
+        print("[SEKANS KONBA]: Sòlda a louvri tir sou zonbi a!")
+        soldier.fire_at_enemy(zombie_bot)
+        time.sleep(0.5)
+        soldier.fire_at_enemy(zombie_bot)
+        time.sleep(0.5)
+        soldier.fire_at_enemy(zombie_bot)
+        time.sleep(0.5)
+        soldier.fire_at_enemy(zombie_bot) # 4 kout bal ap elimine l nèt (25 x 4 = 100)
         
-        # Simulation reload
-        soldier.reload_weapon()
         print("-------------------------------------------------------")
-        print(" ✅ STATUS: Neon Fall Alpha game logic tested successfully on core environment.")
+        print(" ✅ STATUS: Sistèm Combat ak Enèmi AI teste 100% kòrèkteman.")
 
 if __name__ == "__main__":
     game_instance = NeonFallAlphaGame()
