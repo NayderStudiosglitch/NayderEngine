@@ -1,21 +1,43 @@
 import pygame
 import sys
+import os
+
+class AssetLoader:
+    def __init__(self):
+        self.base_path = "Assets"
+        print(" -> [ASSET LOADER]: Sistèm eskanè fichye yo SOU LI.")
+
+    def verify_and_load(self, folder, file_name):
+        full_path = os.path.join(self.base_path, folder, file_name)
+        if os.path.exists(full_path):
+            print(f"    [IO_SUCCESS]: Fichye detekte nan '{full_path}'! Loading nan VRAM...")
+            return True
+        else:
+            print(f"    [IO_ERROR]: Fichye '{full_path}' manke nan katab la!")
+            return False
 
 class GameObject:
-    def __init__(self, name, x, y, color, size):
+    def __init__(self, name, x, y, color, size, mesh_file):
         self.name = name
         self.x = x
         self.y = y
         self.color = color
         self.size = size
+        self.mesh_file = mesh_file
 
 class SceneSystem:
     def __init__(self):
         self.game_objects = {}
+        self.loader = AssetLoader()
 
-    def spawn_object(self, obj):
-        self.game_objects[obj.name] = obj
-        print(f" -> [SCENE SYSTEM]: '{obj.name}' spawn nan grid la kòrèkteman.")
+    def spawn_object(self, obj, folder):
+        print(f"\n -> [SCENE SYSTEM]: Ap eseye spawn '{obj.name}'...")
+        # Verifye si vrè fichye a la anvan li spawn
+        if self.loader.verify_and_load(folder, obj.mesh_file):
+            self.game_objects[obj.name] = obj
+            print(f" ✅ STATUS: '{obj.name}' parèt sou kadriyaj la 100% kòrèkteman.")
+        else:
+            print(f" ❌ STATUS: Blokus! Pa ka spawn '{obj.name}' paske fichye l manke.")
 
 class NayderEngineRuntime:
     def __init__(self):
@@ -25,22 +47,15 @@ class NayderEngineRuntime:
         self.screen_width = 800
         self.screen_height = 600
         self.window = pygame.display.set_mode((self.screen_width, self.screen_height))
-        pygame.display.set_caption("NAYDER ENGINE v0.0.1 - Phase 1 Protocore")
+        pygame.display.set_caption("NAYDER ENGINE v0.0.18 - File Stream Core")
         self.clock = pygame.time.Clock()
         self.is_running = True
         
         self.scene = SceneSystem()
         
         print("\n=======================================================")
-        print("    [NAYDER ENGINE v0.0.1] - CORE INITIALIZED WITH GIT")
+        print("    [NAYDER ENGINE v0.0.18] - HARDWARE FILE STREAM CORE")
         print("=======================================================")
-        print(" [*] Engine Core      -> ✅ SOU LI")
-        print(" [*] Window System    -> ✅ SOU LI (800x600)")
-        print(" [*] Input System     -> ✅ SOU LI (Keyboard/Mouse)")
-        print(" [*] Renderer Base    -> ✅ SOU LI (Editor Grid)")
-        print(" [*] Scene System     -> ✅ SOU LI")
-        print(" [*] Entity System    -> ✅ SOU LI")
-        print("-------------------------------------------------------")
 
     def run(self):
         while self.is_running:
@@ -49,8 +64,6 @@ class NayderEngineRuntime:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.is_running = False
-                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    print(f" -> [INPUT SYSTEM]: Mouse click detekte nan pos: {mouse_pos}")
 
             keys = pygame.key.get_pressed()
             player = self.scene.game_objects.get("Player_Soldier")
@@ -71,9 +84,7 @@ class NayderEngineRuntime:
                 pygame.draw.rect(self.window, obj.color, (obj.x, obj.y, obj.size, obj.size))
                 
             font = pygame.font.SysFont("monospace", 12, bold=True)
-            self.window.blit(font.render("NAYDER ENGINE V0.0.1 - DEVELOPMENT ARCHITECTURE", True, (0, 210, 255)), (20, 20))
-            self.window.blit(font.render("[KONTWÒL: W-A-S-D OSWA FLÈCH POU DEPLASE JWÈ A]", True, (120, 125, 135)), (20, 40))
-
+            self.window.blit(font.render("NAYDER ENGINE V0.0.18 - FILE INTERACTION ONLINE", True, (0, 210, 255)), (20, 20))
             pygame.display.flip()
             self.clock.tick(107)
 
@@ -83,10 +94,11 @@ class NayderEngineRuntime:
 if __name__ == "__main__":
     runtime = NayderEngineRuntime()
     
-    soldaer = GameObject("Player_Soldier", 200, 300, (0, 255, 128), 30)
-    runtime.scene.spawn_object(soldaer)
+    # Nou ajoute gwo non vrè fichye .fbx yo dirèkteman nan Entity System nan!
+    soldaer = GameObject("Player_Soldier", 200, 300, (0, 255, 128), 30, "haitian_soldier.fbx")
+    runtime.scene.spawn_object(soldaer, "Models")
     
-    zomb = GameObject("Zombie_Entity", 600, 300, (220, 50, 50), 25)
-    runtime.scene.spawn_object(zomb)
+    zomb = GameObject("Zombie_Entity", 600, 300, (220, 50, 50), 25, "chopper.fbx")
+    runtime.scene.spawn_object(zomb, "Models")
     
     runtime.run()
