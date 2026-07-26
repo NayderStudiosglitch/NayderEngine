@@ -2,62 +2,54 @@ import sys
 import time
 import random
 
-class DestructibleStructure:
-    def __init__(self, name, integrity_points):
-        self.name = name
-        self.integrity = integrity_points
-        self.is_destroyed = False
-
-    def receive_heavy_impact(self, damage_amount):
-        if self.is_destroyed:
-            return
-            
-        self.integrity -= damage_amount
-        print(f" 🧱 [STRUCTURE IMPACT]: '{self.name}' frape ak -{damage_amount} fòs fizik!")
-        
-        if self.integrity <= 0:
-            self.integrity = 0
-            self.is_destroyed = True
-            # Simulate moso debri yo k ap vole (Physics Fracture Vector Simulation)
-            debri_count = random.randint(12, 25)
-            print(f"\n💥💥 [PHYSICS FRACTURE]: '{self.name}' KRAZE NÈT AN MÈT PYÈS!")
-            print(f"    -> NAYDER ENGINE (C++): Matrix fracture split completed.")
-            print(f"    -> PARTICLES: {debri_count} moso debri ak gwo nwaj pousyè deklanche nan VRAM.")
-        else:
-            # Afiche nivo domaj la
-            print(f"    [DAMAGE STATE]: '{self.name}' fann! Rezistans ki rete: {self.identity_check()}%")
-
-    def identity_check(self):
-        return int((self.integrity / 200) * 100) if self.integrity > 0 else 0
-
-class NeonFallAlphaGame:
+class NeonFallAlphaGameSystem:
     def __init__(self):
-        print("\n=======================================================")
-        print("    [PROJECT: NEON FALL] - ALPHA v0.6 DESTRÌKSYON MAP")
-        print("=======================================================")
+        self.player_name = "NAYDER_01"
+        self.player_score = 19650  # Toupre limit 20,000 pwen an
+        self.map_name = "Desert Ghost City"
+        self.radiation_storm_active = False
+
+    def add_combat_score(self, points):
+        self.player_score += points
+        print(f" 🎯 [COMBAT LOG]: +{points} Pwen! Total Score: {self.player_score}/20000")
         
-    def start_game_simulation(self):
-        # Spawn yon gwo miray blennde nan zòn vil la
-        city_wall = DestructibleStructure(name="MILITARY_BARRICADE_WALL_01", integrity_points=200)
+        # Tcheke si limit Tactical Nuke la rive (20,000 pwen)
+        if self.player_score >= 20000:
+            self.execute_tactical_nuclear_protocol()
+
+    def execute_tactical_nuclear_protocol(self):
+        print("\n=========================================================================")
+        print("🚨🚨🚨 [ALÈT CRITICAL] - TACTICAL NUCLEAR STRIKE PROTOCOL DEBLOKE! 🚨🚨🚨")
+        print("=========================================================================")
+        print(" -> APÈL AUDIO AUTOMATIK: 'TACTICAL NUKE IS READY TO DETONATE!'")
+        print(" -> SOUND SYSTEM: 🚨 SIRÈN NIKLEYÈ AP SONNEN NAN TOUT MAP LA! (🚨 BEEP... 🚨 BEEP...)")
+        time.sleep(1) # Ti poz simulation fizik
         
-        print(f" -> [SPAWN]: '{city_wall.name}' plase sou kat la kòm objè fizik destriktib.")
-        print("-------------------------------------------------------")
+        print("\n💥💥💥 BOOM!!! DETONASYON NIKLEYÈ REYISI! 💥💥💥")
+        print(" -> SYSTEM: Tout 50 jwè lènmi yo ak tout zonbi sou kat la ELIMINE yon sèl kou!")
+        print(" -> PHYSICS & DESTRUCTION: Gwo fòs eksplozyon an kraze tout miray ak bilding yo an moso.")
+        print(" -> GRAPHICS ENGINE (C++): Kamera ap SHAKE intensely... (~ * ~ * ~ * ~)")
         
-        # 1. Premye kout zam ki fann miray la
-        time.sleep(0.5)
-        print("[ACTION]: Yon jwè tire sou miray la ak yon zam lou...")
-        city_wall.receive_heavy_impact(damage_amount=75)
-        
-        print("-------------------------------------------------------")
-        # 2. Dezyèm gwo enpak (Koki Tank) k ap eksploze miray la nèt ale!
-        time.sleep(0.5)
-        print("[ACTION]: Gwo kanon Tank lan tire yon koki dirèkteman sou miray la...")
-        city_wall.receive_heavy_impact(damage_amount=150)
-        
-        print("-------------------------------------------------------")
-        print(" ✅ STATUS: Sistèm Fracture ak Destriksyon Debri teste 100% kòrèkteman.")
+        # Chanjman Kat la nèt (Map Morphing)
+        self.map_name = "NUCLEAR CRATER (ENDGAME ZONE)"
+        self.radiation_storm_active = True
+        print(f"\n🌍 [MAP MORPHING]: Kat la tounen: '{self.map_name}'!")
+        print(" ⛈️  [WEATHER HAZARD]: Zòn Radyasyon deklanche. -10 HP pou nenpòt moun ki pa gen kostim.")
+        print("-------------------------------------------------------------------------")
+        print(" ✅ STATUS: JALL-OUT ENDGAME SEQUENCE COMPLETED SUCCESSFUL.")
 
 if __name__ == "__main__":
-    game_instance = NeonFallAlphaGame()
-    game_instance.start_game_simulation()
+    game_core = NeonFallAlphaGameSystem()
+    print("\n=======================================================")
+    print("    [PROJECT: NEON FALL] - ALPHA v0.7 FINAL INTEGRATION")
+    print("=======================================================")
+    print(f" -> Map Kòmansman: {game_core.map_name}")
+    print("-------------------------------------------------------")
+    
+    # Simulate de (2) headshots pou jwè a rive nan 20,000 pwen pou deklanche sekans lan
+    time.sleep(0.5)
+    game_core.add_combat_score(points=200) # Headshot +200
+    
+    time.sleep(0.5)
+    game_core.add_combat_score(points=200) # Dezyèm headshot k ap depase 20,000 pwen!
     print("=======================================================")
