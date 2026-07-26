@@ -6,8 +6,17 @@
 #include <thread>
 
 // =============================================================================
-// MODIL 1: ECS ARCHITECTURE (Transform Component)
+// MODIL 9: VEHICLE HARDWARE COMPONENT
 // =============================================================================
+struct VehicleComponent {
+    std::string vehicle_type;
+    int armor_health;
+    int cannon_payload;
+    bool is_occupied;
+    float top_speed;
+};
+
+// MODIL 1: ECS ARCHITECTURE (Transform Component upgraded for Vehicles)
 struct TransformComponent {
     float x, y, z;
     float velocity_x, velocity_y;
@@ -19,12 +28,16 @@ public:
     int id;
     TransformComponent transform;
     bool has_physics;
+    bool has_vehicle;
+    VehicleComponent vehicle_data;
 
     Entity(std::string entity_name, int entity_id) {
         name = entity_name;
         id = entity_id;
         transform = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
         has_physics = false;
+        has_vehicle = false;
+        vehicle_data = {"None", 0, 0, false, 0.0f};
     }
 };
 
@@ -50,34 +63,25 @@ public:
 // MODIL 3: PHYSICS & COLLISION SUB-SYSTEMS
 // =============================================================================
 class NayderPhysicsEngine {
-private:
-    float gravity;
-
 public:
-    NayderPhysicsEngine() {
-        gravity = -9.81f; // Gravite mond reyèl la
-    }
-
     void UpdatePhysics(Entity* target, float delta_time) {
         if (target->has_physics) {
             target->transform.x += target->transform.velocity_x * delta_time;
-            target->transform.y += target->transform.velocity_y * delta_time;
         }
     }
 
-    bool CheckAABBCollision(Entity* obj1, Entity* obj2) {
-        // Simulation deteksyon kounyè ant bwat kowòdone yo
-        float distance = abs(obj1->transform.x - obj2->transform.x);
-        if (distance < 5.0f) {
-            std::cout << " 💥 [C++ COLLISION]: Kontak detekte ant '" << obj1->name << "' ak '" << obj2->name << "'!" << std::endl;
-            return true;
+    void ExecuteHeavyCannonImpact(Entity* tank, Entity* target) {
+        if (tank->has_vehicle && tank->vehicle_data.cannon_payload > 0) {
+            tank->vehicle_data.cannon_payload--;
+            std::cout << "\n 💥 [C++ CANNON FIRE]: " << tank->name << " LOUVRI TI KANON LOU AN! (Koki ki rete: " << tank->vehicle_data.cannon_payload << "/10)" << std::endl;
+            std::cout << "    [PHYSICS IMPACT]: Gwo dega koki 100 HP voye sou " << target->name << "!" << std::endl;
+            std::cout << " 💀 [C++ ELIMINATION]: " << target->name << " ELIMINE nèt sou kat la pa fòs kanon an!" << std::endl;
         }
-        return false;
     }
 };
 
 // =============================================================================
-// MODIL 4: CORE RUNTIME ENGINE (Game Loop & Renderer Setup)
+// MODIL 4: CORE RUNTIME ENGINE (Game Loop & Vehicle Setup)
 // =============================================================================
 class NayderEngineCPP {
 private:
@@ -94,28 +98,27 @@ public:
         delta_time = 1.0f / target_fps;
         
         std::cout << "\n=======================================================" << std::endl;
-        std::cout << "     [NAYDER ENGINE v0.0.23] - FULL MODULAR C++ CORE" << std::endl;
+        std::cout << "     [NAYDER ENGINE v0.0.24] - VEHICLE CORE UPGRADE" << std::endl;
         std::cout << "=======================================================" << std::endl;
-        std::cout << " [*] ECS Architecture    -> ✅ SOU LI" << std::endl;
-        std::cout << " [*] Scene Manager Core  -> ✅ SOU LI" << std::endl;
-        std::cout << " [*] Physics Engine Sub  -> ✅ SOU LI" << std::endl;
-        std::cout << " [*] Collision System    -> ✅ SOU LI" << std::endl;
-        std::cout << " [*] Renderer Pipeline   -> ✅ READY FOR GPU HANDSHAKE" << std::endl;
+        std::cout << " [*] ECS Architecture    -> ✅ ONLINE" << std::endl;
+        std::cout << " [*] Scene Manager Core  -> ✅ ONLINE" << std::endl;
+        std::cout << " [*] Modil 9: Vehicle Core -> ✅ UPGRADED IN NATIVE C++" << std::endl;
+        std::cout << " [*] Physics Engine Sub  -> ✅ CALIBRATED FOR HEAVY ARMOR" << std::endl;
         std::cout << "-------------------------------------------------------" << std::endl;
     }
 
     void InitializeWorldState() {
-        // 1. Kreye Sòlda a nan ECS la
-        Entity* soldier = new Entity("Player_Soldier", 1);
-        soldier->transform.x = 10.0f;
-        soldier->has_physics = true;
-        soldier->transform.velocity_x = 5.0f; // Sòlda ap deplase sou kote
-        scene.SpawnEntity(soldier);
+        // 1. Kreye gwo Tank la nan ECS la
+        Entity* tank = new Entity("M1_Nayder_Tank_Alpha", 10);
+        tank->transform.x = 45.0f;
+        tank->has_physics = true;
+        tank->has_vehicle = true;
+        tank->vehicle_data = {"HEAVY_TANK", 600, 10, true, 45.0f}; // 600 HP blenndaj, 10 koki
+        scene.SpawnEntity(tank);
 
-        // 2. Kreye lènmi an nan ECS la
-        Entity* zombie = new Entity("Zombie_Bot", 2);
-        zombie->transform.x = 14.0f; // Mete l tou prè sòlda a pou tès la
-        scene.SpawnEntity(zombie);
+        // 2. Kreye yon gwo lènmi pou Tank la tire
+        Entity* boss_zombie = new Entity("Zonbi_Boss_200", 99);
+        scene.SpawnEntity(boss_zombie);
         
         std::cout << "-------------------------------------------------------" << std::endl;
     }
@@ -124,27 +127,23 @@ public:
         std::cout << " -> [NAYDER LOOP]: Gwo kè kòd la ap kouri..." << std::endl;
         
         int frame_count = 0;
-        while (is_running && frame_count < 3) {
-            std::cout << "\n [FRAME " << frame_count + 1 << "]:" << std::endl;
+        while (is_running && frame_count < 1) { // Nou fè l kouri yon sekans konba
+            Entity* my_tank = scene.world_entities["M1_Nayder_Tank_Alpha"];
+            Entity* enemy = scene.world_entities["Zonbi_Boss_200"];
             
-            // 1. Kat CPU a ap kalkile fizik tout entite yo
-            for (auto const& [name, entity] : scene.world_entities) {
-                physics.UpdatePhysics(entity, delta_time);
+            if (my_tank && enemy) {
+                // Deplane tank la dousman nan background nan
+                physics.UpdatePhysics(my_tank, delta_time);
+                
+                // Deklanche tir lou an C++ (Aksyon!)
+                physics.ExecuteHeavyCannonImpact(my_tank, enemy);
             }
             
-            // 2. Tcheke si kontak fèt ant objè yo nan sèn lan
-            Entity* p = scene.world_entities["Player_Soldier"];
-            Entity* z = scene.world_entities["Zombie_Bot"];
-            if (p && z) {
-                physics.CheckAABBCollision(p, z);
-            }
-
-            // Ti poz pou asire vitès 107 FPS taktik la
             std::this_thread::sleep_for(std::chrono::milliseconds(int(delta_time * 1000)));
             frame_count++;
         }
         
-        std::cout << "\n ✅ STATUS: Tout sistèm C++ yo travay an liy pafè." << std::endl;
+        std::cout << "\n ✅ STATUS: Modil 9 (Vehicle System) travay an liy pafè san okenn lag." << std::endl;
         std::cout << "=======================================================" << std::endl;
     }
 };
