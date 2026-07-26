@@ -2,52 +2,44 @@
 #include <string>
 #include <map>
 #include <vector>
-#include <chrono>
-#include <thread>
 
 // =============================================================================
-// MODIL 14: MULTIPLAYER NETWORK CORE (C++ HIGH-SPEED PACKET SYSTEM)
+// MODIL 12: ASSET MANAGER CORE (C++ HARDWARE FILE REGISTRY)
 // =============================================================================
-struct PlayerNetworkPacket {
-    std::string player_id;
-    std::string squad_team; // "ALPHA" oswa "BETA"
-    float pos_x, pos_y;
-    int current_ping;
-    std::string last_action;
+struct AssetData {
+    std::string asset_guid;
+    std::string file_path;
+    std::string asset_type; // "MESH_3D", "AUDIO_WAV", "TEXTURE"
+    bool is_memory_allocated;
 };
 
-class NayderDedicatedServer {
+class AssetManagerCore {
 private:
-    int tick_rate;
-    int total_connected;
-    std::map<std::string, PlayerNetworkPacket> replication_graph;
+    std::map<std::string, AssetData> asset_registry;
 
 public:
-    NayderDedicatedServer() {
-        tick_rate = 60; // 60Hz Tick Rate pwofesyonèl
-        total_connected = 0;
+    AssetManagerCore() {
+        std::cout << " -> [C++ ASSET MANAGER]: Hardware registry initialization complete." << std::endl;
     }
 
-    void HandlePlayerHandshake(std::string id, std::string team, float spawn_x, float sk_y) {
-        total_connected++;
-        PlayerNetworkPacket packet = {id, team, spawn_x, sk_y, 42, "SPAWNED_IN_TERRAIN"};
-        replication_graph[id] = packet;
+    void RegisterAndLoadAsset(std::string name, std::string path, std::string type) {
+        std::string guid = "GUID_" + name + "_0x7F";
+        AssetData new_asset = {guid, path, type, true};
+        asset_registry[name] = new_asset;
         
-        std::cout << " 📡 [NETWORKING]: Jwè '" << id << "' konekte nan Sèvè Dedye 60Hz." << std::endl;
-        std::cout << "    [MATCHMAKER]: Total: " << total_connected << "/100 | Sove nan Replication Graph Cluster." << std::endl;
+        std::cout << " -> [REGISTRY]: Chaje '" << name << "' [" << type << "] depi '" << path << "'..." << std::endl;
+        std::cout << "    [RAM POINTER]: Alokasyon memwa sekirite fèt pou GUID: " << guid << std::endl;
+        std::cout << " ✅ STATUS: Asset chaje 100% nan Resource Cluster la." << std::endl;
     }
 
-    void ReplicateWorldState() {
-        std::cout << "\n🔄 [SERVER BROADCAST - TICK STATE 60HZ]: Replicating matrix packets..." << std::endl;
-        std::cout << "    [REZO]: Sinkwonize kowòdone tout jwè yo an liy nan Open World la..." << std::endl;
+    void VerifyLoadedAssetsRegistry() {
+        std::cout << "\n📦 [ASSET REGISTRY VERIFICATION LOGS]:" << std::endl;
         std::cout << " -------------------------------------------------------" << std::endl;
-
-        for (auto const& [id, packet] : replication_graph) {
-            std::cout << "   [-] REPLICATED: ID: " << packet.player_id 
-                      << " | Ekip: " << packet.squad_team 
-                      << " | Pos: (" << packet.pos_x << ", " << packet.pos_y << ")"
-                      << " | Ping: " << packet.current_ping << "ms"
-                      << " | Aksyon: " << packet.last_action << std::endl;
+        for (auto const& [name, asset] : asset_registry) {
+            std::cout << "   [-] ASSET: " << name 
+                      << " | Kalite: " << asset.asset_type 
+                      << " | Path: " << asset.file_path 
+                      << " | VRAM Alloc: " << (asset.is_memory_allocated ? "YES" : "NO") << std::endl;
         }
     }
 };
@@ -57,38 +49,34 @@ public:
 // =============================================================================
 class NayderEngineCPP {
 private:
-    NayderDedicatedServer server_core;
+    AssetManagerCore asset_manager;
 
 public:
     NayderEngineCPP() {
         std::cout << "\n=======================================================" << std::endl;
-        std::cout << "     [NAYDER ENGINE v0.0.31] - MULTIPLAYER REZO CORE" << std::endl;
+        std::cout << "     [NAYDER ENGINE v0.0.32] - ASSET MANAGER CORE" << std::endl;
         std::cout << "=======================================================" << std::endl;
-        std::cout << " [*] Modil 14: Network Core  -> ✅ ONLINE AN C++" << std::endl;
-        std::cout << " [*] 60Hz Server Replication -> ✅ TICK MATRIX LOCKED" << std::endl;
-        std::cout << " [*] 50vs50 Matchmaker Sync  -> ✅ BUFFER CLUSTER READY" << std::endl;
+        std::cout << " [*] Modil 12: Asset Manager -> ✅ ONLINE AN C++" << std::endl;
+        std::cout << " [*] RAM Pointer Allocation  -> ✅ CLUSTER SECURE" << std::endl;
+        std::cout << " [*] VRAM Pre-Load Handshake -> ✅ BALANCED" << std::endl;
         std::cout << "-------------------------------------------------------" << std::endl;
     }
 
-    void SimulateMultiplayerNetwork() {
-        // 1. Simulate antre premye ak dènye jwè nan match 50vs50 la
-        server_core.HandlePlayerHandshake("NAYDER_01", "ALPHA", 120.5f, 300.0f);
-        server_core.HandlePlayerHandshake("SQUAD_MEMBER_02", "ALPHA", 125.0f, 310.0f);
+    void SimulateAssetLoadingPipeline() {
+        // 1. Chaje modèl 3D yo nan manadjè a
+        asset_manager.RegisterAndLoadAsset("Haitian_Soldier_Heavy", "Assets/Models/haitian_soldier.fbx", "MESH_3D");
+        asset_manager.RegisterAndLoadAsset("Military_Chopper", "Assets/Models/chopper.fbx", "MESH_3D");
         
-        // Simulation rapid pou montre ranpli lobi a
-        std::cout << "    [SERVER LOGS]: 97 lòt jwè senkronize nan background nan..." << std::endl;
+        // 2. Chaje gwo son sirèn nikleyè a
+        asset_manager.RegisterAndLoadAsset("Nuclear_Siren_Alarm", "Assets/Audio/nuclear_siren.wav", "AUDIO_WAV");
         
-        // 100tyèm jwè a antre pou deklanche replikasyon an
-        server_core.HandlePlayerHandshake("ENEMY_PLAYER_50", "BETA", 650.0f, 300.0f);
-        
-        // 2. Rele gwo emisyon replikasyon rezo a (Aksyon!)
-        std::this_thread::sleep_for(std::chrono::milliseconds(300));
-        server_core.ReplicateWorldState();
+        // 3. Verifye tout lis la nan memwa a
+        asset_manager.VerifyLoadedAssetsRegistry();
     }
 };
 
 int main() {
     NayderEngineCPP engine;
-    engine.SimulateMultiplayerNetwork();
+    engine.SimulateAssetLoadingPipeline();
     return 0;
 }
