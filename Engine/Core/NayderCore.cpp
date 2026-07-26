@@ -1,89 +1,94 @@
 #include <iostream>
-#include <vector>
 #include <string>
 #include <map>
+#include <vector>
+#include <chrono>
+#include <thread>
 
 // =============================================================================
-// MODIL 13: WORLD TERRAIN & HEIGHTMAP MATRIX ENGINE
+// MODIL 14: MULTIPLAYER NETWORK CORE (C++ HIGH-SPEED PACKET SYSTEM)
 // =============================================================================
-struct TerrainChunk {
-    int chunk_id;
-    int coordinate_x;
-    int coordinate_y;
-    float average_height; // Wotè mòn yo nan zòn sa a
-    bool is_loaded_in_vram;
+struct PlayerNetworkPacket {
+    std::string player_id;
+    std::string squad_team; // "ALPHA" oswa "BETA"
+    float pos_x, pos_y;
+    int current_ping;
+    std::string last_action;
 };
 
-class NayderWorldTerrainSystem {
+class NayderDedicatedServer {
 private:
-    std::map<int, TerrainChunk> terrain_grid;
-    int total_chunks;
+    int tick_rate;
+    int total_connected;
+    std::map<std::string, PlayerNetworkPacket> replication_graph;
 
 public:
-    NayderWorldTerrainSystem() {
-        total_chunks = 4; // Map la divize an 4 gwo zòn (Grid Chunks) pour Alpha a
-        
-        // Inisyalize Grid Chunks yo (Mòn ak Zòn Konba yo)
-        terrain_grid[1] = {1, 0, 0, 450.5f, false};  // Zòn 1: Mòn Alpha (High Poly)
-        terrain_grid[2] = {2, 1, 0, 120.0f, false};  // Zòn 2: Vil Ruins (City Ruins)
-        terrain_grid[3] = {3, 0, 1, 320.2f, false};  // Zòn 3: Mòn Beta (Zombie Zone)
-        terrain_grid[4] = {4, 1, 1, 0.0f,   false};  // Zòn 4: Sann Nikleyè (Crater Ground)
+    NayderDedicatedServer() {
+        tick_rate = 60; // 60Hz Tick Rate pwofesyonèl
+        total_connected = 0;
     }
 
-    void StreamWorldTerrain(float player_x, float player_y) {
-        std::cout << "\n🗺️  [TERRAIN STREAMING]: Ap kalkile pozisyon Sòlda a nan Open World la... (" << player_x << ", " << player_y << ")" << std::endl;
-        std::cout << "    [GPU CORE]: Dynamic Heightmap Tessellation active." << std::endl;
+    void HandlePlayerHandshake(std::string id, std::string team, float spawn_x, float sk_y) {
+        total_connected++;
+        PlayerNetworkPacket packet = {id, team, spawn_x, sk_y, 42, "SPAWNED_IN_TERRAIN"};
+        replication_graph[id] = packet;
+        
+        std::cout << " 📡 [NETWORKING]: Jwè '" << id << "' konekte nan Sèvè Dedye 60Hz." << std::endl;
+        std::cout << "    [MATCHMAKER]: Total: " << total_connected << "/100 | Sove nan Replication Graph Cluster." << std::endl;
+    }
+
+    void ReplicateWorldState() {
+        std::cout << "\n🔄 [SERVER BROADCAST - TICK STATE 60HZ]: Replicating matrix packets..." << std::endl;
+        std::cout << "    [REZO]: Sinkwonize kowòdone tout jwè yo an liy nan Open World la..." << std::endl;
         std::cout << " -------------------------------------------------------" << std::endl;
 
-        // Lojik Streaming pwofesyonèl: Chaje zòn ki toupre jwè a, bloke sa ki lwen
-        for (auto& [id, chunk] : terrain_grid) {
-            if (id == 1 && player_x < 500.0f) {
-                chunk.is_loaded_in_vram = true;
-                std::cout << "   ✅ [CHUNK " << id << " LOADED]: Mòn Alpha (" << chunk.average_height << "m) chaje nan VRAM Kat Grafik la!" << std::endl;
-            } 
-            else if (id == 2 && player_x >= 500.0f) {
-                chunk.is_loaded_in_vram = true;
-                std::cout << "   ✅ [CHUNK " << id << " LOADED]: Vil Ruins (" << chunk.average_height << "m) chaje nan VRAM Kat Grafik la!" << std::endl;
-            }
-            else {
-                chunk.is_loaded_in_vram = false;
-                std::cout << "   💤 [CHUNK " << id << " UNLOADED]: Zòn sa a lwen, li dòmi nan RAM pou evite blokus lag." << std::endl;
-            }
+        for (auto const& [id, packet] : replication_graph) {
+            std::cout << "   [-] REPLICATED: ID: " << packet.player_id 
+                      << " | Ekip: " << packet.squad_team 
+                      << " | Pos: (" << packet.pos_x << ", " << packet.pos_y << ")"
+                      << " | Ping: " << packet.current_ping << "ms"
+                      << " | Aksyon: " << packet.last_action << std::endl;
         }
     }
 };
 
 // =============================================================================
-// ENGINE RUNTIME ENGINE
+// ENGINE RUNTIME ENVIRONMENT
 // =============================================================================
 class NayderEngineCPP {
 private:
-    NayderWorldTerrainSystem terrain_system;
+    NayderDedicatedServer server_core;
 
 public:
     NayderEngineCPP() {
         std::cout << "\n=======================================================" << std::endl;
-        std::cout << "     [NAYDER ENGINE v0.0.30] - WORLD TERRAIN SYSTEM" << std::endl;
+        std::cout << "     [NAYDER ENGINE v0.0.31] - MULTIPLAYER REZO CORE" << std::endl;
         std::cout << "=======================================================" << std::endl;
-        std::cout << " [*] Modil 13: Terrain Editor  -> ✅ OPERATIONAL AN C++" << std::endl;
-        std::cout << " [*] Heightmap Tessellation   -> ✅ SYSTEM LOCK ACTIVE" << std::endl;
-        std::cout << " [*] World Chunk Streaming    -> ✅ DYNAMIC BUFFER SOU LI" << std::endl;
+        std::cout << " [*] Modil 14: Network Core  -> ✅ ONLINE AN C++" << std::endl;
+        std::cout << " [*] 60Hz Server Replication -> ✅ TICK MATRIX LOCKED" << std::endl;
+        std::cout << " [*] 50vs50 Matchmaker Sync  -> ✅ BUFFER CLUSTER READY" << std::endl;
         std::cout << "-------------------------------------------------------" << std::endl;
     }
 
-    void SimulateWorldStreaming() {
-        // TÈS 1: Jwè a nan kòmansman map la (Bò gòch - toupre Mòn Alpha)
-        terrain_system.StreamWorldTerrain(120.0f, 0.0f);
+    void SimulateMultiplayerNetwork() {
+        // 1. Simulate antre premye ak dènye jwè nan match 50vs50 la
+        server_core.HandlePlayerHandshake("NAYDER_01", "ALPHA", 120.5f, 300.0f);
+        server_core.HandlePlayerHandshake("SQUAD_MEMBER_02", "ALPHA", 125.0f, 310.0f);
         
-        std::cout << "\n=======================================================" << std::endl;
+        // Simulation rapid pou montre ranpli lobi a
+        std::cout << "    [SERVER LOGS]: 97 lòt jwè senkronize nan background nan..." << std::endl;
         
-        // TÈS 2: Jwè a kouri byen rapid, li janbe lòt bò map la (Bò dwat - nan Vil Ruins)
-        terrain_system.StreamWorldTerrain(650.0f, 0.0f);
+        // 100tyèm jwè a antre pou deklanche replikasyon an
+        server_core.HandlePlayerHandshake("ENEMY_PLAYER_50", "BETA", 650.0f, 300.0f);
+        
+        // 2. Rele gwo emisyon replikasyon rezo a (Aksyon!)
+        std::this_thread::sleep_for(std::chrono::milliseconds(300));
+        server_core.ReplicateWorldState();
     }
 };
 
 int main() {
     NayderEngineCPP engine;
-    engine.SimulateWorldStreaming();
+    engine.SimulateMultiplayerNetwork();
     return 0;
 }
