@@ -4,52 +4,55 @@ from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
+# Done Jewometri 3D pou Jwè a ak Platfòm Evakiyasyon an (Escape Harbor Matrix)
 vertices = ((1,-1,-1), (1,1,-1), (-1,1,-1), (-1,-1,-1), (1,-1,1), (1,1,1), (-1,-1,1), (-1,1,1))
 edges = ((0,1), (0,3), (0,4), (2,1), (2,3), (2,7), (6,3), (6,4), (6,7), (5,1), (5,4), (5,7))
-colors = ((0,210,255), (220,50,50), (0,255,128), (230,180,40), (150,0,255), (255,0,150))
 surfaces = ((0,1,2,3), (3,2,7,6), (6,7,5,4), (4,5,1,0), (1,5,7,2), (4,0,3,6))
-normals = ((0,0,-1), (-1,0,0), (0,0,1), (1,0,0), (0,1,0), (0,-1,0))
 
 is_firing_laser = False
+escape_vehicle_z = -15.0 # Kòmanse byen lwen nan forè a
+mission_success = False
 
 def Configured_Neon_Lighting():
     glEnable(GL_LIGHTING)
     glEnable(GL_LIGHT0)
     glEnable(GL_COLOR_MATERIAL)
     glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE)
-    glLightfv(GL_LIGHT0, GL_POSITION, [0.0, 5.0, 5.0, 1.0])
-    glLightfv(GL_LIGHT0, GL_AMBIENT, [0.2, 0.2, 0.3, 1.0])
+    glLightfv(GL_LIGHT0, GL_POSITION, [0.0, 10.0, 5.0, 1.0])
     glLightfv(GL_LIGHT0, GL_DIFFUSE, [0.0, 0.8, 1.0, 1.0])
 
-def Desine_Player_3D():
+def Desine_Escape_Vehicle(z_pos):
+    # Desine machin 10 jwè yo k ap deplase pou sove kò yo
+    glPushMatrix()
+    glTranslatef(0.0, 0.0, z_pos)
     glBegin(GL_QUADS)
-    for i, surface in enumerate(surfaces):
-        glNormal3fv(normals[i % len(normals)])
-        glColor3fv(colors[i % len(colors)])
+    for surface in surfaces:
+        glColor3fv((220, 50, 50)) # Koulè Neon Wouj pou machin nan
         for vertex in surface: glVertex3fv(vertices[vertex])
     glEnd()
-    
-    glDisable(GL_LIGHTING)
-    glBegin(GL_LINES)
-    glColor3fv((10,10,15))
-    for edge in edges:
-        for vertex in edge: glVertex3fv(vertices[vertex])
-    glEnd()
-    glEnable(GL_LIGHTING)
+    glPopMatrix()
 
-# =============================================================================
-# MODIL 3D WEAPON FIRE SIMULATION (LASER RAYCAST MATRIX)
-# =============================================================================
-def Desine_Laser_Beam():
+def Desine_Escape_Harbor_Dock():
+    # Desine Gwo Pò Sekirite Evakiyasyon an (Harbor Safe Zone Base)
+    glPushMatrix()
+    glTranslatef(0.0, -1.0, 5.0) # Plase dwat devan jwè a
+    glScalef(3.0, 0.2, 3.0)     # Fè l parèt gwo tankou yon vrè waf bato
+    glBegin(GL_QUADS)
+    for surface in surfaces:
+        glColor3fv((0, 255, 128)) # Koulè Neon Vèt pou Pò Sekirite a!
+        for vertex in surface: glVertex3fv(vertices[vertex])
+    glEnd()
+    glPopMatrix()
+
+def Desine_Laser_Beam(z_pos):
     if is_firing_laser:
         glDisable(GL_LIGHTING)
-        glLineWidth(5.0) # Gwo liy reyon lazè ki dou
-        glColor3fv((255, 0, 50)) # Hot Neon Wouj
+        glLineWidth(6.0)
+        glColor3fv((255, 255, 0)) # Lazè a tounen Koulè Jòn k ap briye nan fènwa a
         glBegin(GL_LINES)
-        glVertex3f(0.0, 0.0, 0.0)    # Soti nan mitan jwè a
-        glVertex3f(0.0, 0.0, 15.0)   # Tire dwat devan an 3D pa 15 mèt!
+        glVertex3f(0.0, 0.0, z_pos)
+        glVertex3f(0.0, 0.0, z_pos + 20.0)
         glEnd()
-        glLineWidth(1.0)
         glEnable(GL_LIGHTING)
 
 def Desine_Terrain_Grid():
@@ -67,38 +70,34 @@ def render_procedural_hud():
     glMatrixMode(GL_MODELVIEW); glPushMatrix(); glLoadIdentity()
     glDisable(GL_LIGHTING); glDisable(GL_DEPTH_TEST)
 
-    # Header Gwòch (Tit)
+    # 🟥 Header Tit: NEON FALL 17 - ESCAPE LAND PROTOCOL
     glColor3fv((220, 50, 50))
-    glBegin(GL_QUADS); glVertex2f(30, 530); glVertex2f(280, 530); glVertex2f(280, 570); glVertex2f(30, 570); glEnd()
+    glBegin(GL_QUADS); glVertex2f(30, 530); glVertex2f(380, 530); glVertex2f(380, 570); glVertex2f(30, 570); glEnd()
 
-    # Header Dwat (Profil)
-    glColor3fv((230, 180, 40))
-    glBegin(GL_QUADS); glVertex2f(500, 540); glVertex2f(770, 540); glVertex2f(770, 565); glVertex2f(500, 565); glEnd()
-
-    # Layout Bouton yo anba a
-    glColor3fv((0, 210, 255)); glBegin(GL_LINE_LOOP); glVertex2f(40, 30); glVertex2f(220, 30); glVertex2f(220, 70); glVertex2f(40, 70); glEnd()
-    glColor3fv((0, 255, 128)); glBegin(GL_LINE_LOOP); glVertex2f(250, 30); glVertex2f(430, 30); glVertex2f(430, 70); glVertex2f(250, 70); glEnd()
+    # 🟩 Si machin nan rive nan pò a, afiche panno Viktwa a nèt ale!
+    if mission_success:
+        glColor3fv((0, 255, 128)) # Panno Viktwa Vèt klere
+        glBegin(GL_QUADS); glVertex2f(200, 250); glVertex2f(600, 250); glVertex2f(600, 350); glVertex2f(200, 350); glEnd()
 
     glEnable(GL_DEPTH_TEST); glEnable(GL_LIGHTING)
     glMatrixMode(GL_PROJECTION); glPopMatrix(); glMatrixMode(GL_MODELVIEW); glPopMatrix()
 
 def main():
-    global is_firing_laser
+    global is_firing_laser, escape_vehicle_z, mission_success
     pygame.init()
     LÈT, WOTÈ = 800, 600
     pygame.display.set_mode((LÈT, WOTÈ), DOUBLEBUF | OPENGL)
-    pygame.display.set_caption("NAYDER ENGINE v0.0.44 - 3D Raycast Laser Strike")
+    pygame.display.set_caption("NAYDER ENGINE v0.0.51 - Escape Harbor 3D Viewport")
     clock = pygame.time.Clock()
 
     gluPerspective(45, (LÈT / WOTÈ), 0.1, 50.0)
-    cam_x, cam_y, cam_z = 0.0, 0.0, -8.0
 
     print("\n=======================================================")
-    print("    [NAYDER ENGINE v0.0.44] - 3D WEAPON LASER PIPELINE")
+    print("    [NAYDER ENGINE v0.0.51] - ESCAPE LAND VIEWPORT CORE")
     print("=======================================================")
-    print(" [*] Raycast Weapon Core -> ✅ ONLINE")
-    print(" [*] Spacebar Mapping    -> ✅ LINKED TO GPU TRIGGERS")
-    print(" -> PEZE BUTTON SPACEBAR POU TI REYON LAZÈ LOU AN!")
+    print(" [*] Harbor Zone Target  -> ✅ STABLE IN 3D SPACE")
+    print(" [*] Escape Vehicle Loop -> ✅ MOVING ON ACCELERATOR CLUSTER")
+    print(" -> KENBE 'W' POU MACHIN LAN AVANSE NAN PÒ A, PEZE 'SPACEBAR' POU TIRE!")
     print("=======================================================")
 
     while True:
@@ -106,27 +105,36 @@ def main():
             if event.type == pygame.QUIT: pygame.quit(); sys.exit()
 
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_w] or keys[pygame.K_UP]:    cam_z += 0.1
-        if keys[pygame.K_s] or keys[pygame.K_DOWN]:  cam_z -= 0.1
-        if keys[pygame.K_a] or keys[pygame.K_LEFT]:  cam_x += 0.1
-        if keys[pygame.K_d] or keys[pygame.K_RIGHT]: cam_x -= 0.1
+        
+        # Lojik deplasman machin nan sou aks Z pou l kouri antre nan pò a
+        if keys[pygame.K_w] or keys[pygame.K_UP]:
+            if escape_vehicle_z < 3.0:
+                escape_vehicle_z += 0.15 # Machin nan ap kouri byen rapid sou 107 FPS!
+            else:
+                if not mission_success:
+                    mission_success = True
+                    print("\n🎉🎉🎉 [MISSION ACCOMPLISHED] 🎉🎉🎉")
+                    print(" -> Skayad 10 jwè a rive nan pò sekirite a pafè!")
+                    print(" -> Bato evakiyasyon an demare! Ou chape anba Zombie Zone lan!")
 
-        # Tcheke si jwè a ap peze Spacebar pou tire
+        if keys[pygame.K_s] or keys[pygame.K_DOWN]:  escape_vehicle_z -= 0.15
         if keys[pygame.K_SPACE]: is_firing_laser = True
         else:                    is_firing_laser = False
 
         glLoadIdentity()
         gluPerspective(45, (LÈT / WOTÈ), 0.1, 50.0)
-        glTranslatef(cam_x, cam_y, cam_z)
-        glRotatef(1, 0, 1, 0)
+        
+        # Kamera a swiv machin nan dousman nan background nan
+        gluLookAt(0.0, 4.0, escape_vehicle_z - 10.0, 0.0, 0.0, escape_vehicle_z, 0.0, 1.0, 0.0)
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glEnable(GL_DEPTH_TEST)
 
-        NayderRenderPipeline = Configured_Neon_Lighting()
+        Configured_Neon_Lighting()
         Desine_Terrain_Grid()
-        Desine_Player_3D()
-        Desine_Laser_Beam() # Kalkile epi desine reyon lazè a si Spacebar enfonse
+        Desine_Escape_Harbor_Dock() # Desine vrè pò sekirite a nan sèn nan
+        Desine_Escape_Vehicle(escape_vehicle_z) # Desine machin k ap kouri a
+        Desine_Laser_Beam(escape_vehicle_z)
         render_procedural_hud()
 
         pygame.display.flip()
