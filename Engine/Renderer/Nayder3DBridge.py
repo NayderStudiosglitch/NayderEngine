@@ -16,12 +16,9 @@ def Configured_Neon_Lighting():
     glEnable(GL_LIGHT0)
     glEnable(GL_COLOR_MATERIAL)
     glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE)
-    limye_pozisyon = [0.0, 5.0, 5.0, 1.0]
-    limye_ambient = [0.2, 0.2, 0.3, 1.0]
-    limye_diffuse = [0.0, 0.8, 1.0, 1.0]
-    glLightfv(GL_LIGHT0, GL_POSITION, limye_pozisyon)
-    glLightfv(GL_LIGHT0, GL_AMBIENT, limye_ambient)
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, limye_diffuse)
+    glLightfv(GL_LIGHT0, GL_POSITION, [0.0, 5.0, 5.0, 1.0])
+    glLightfv(GL_LIGHT0, GL_AMBIENT, [0.2, 0.2, 0.3, 1.0])
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, [0.0, 0.8, 1.0, 1.0])
 
 def Desine_Player_3D():
     glBegin(GL_QUADS)
@@ -30,7 +27,7 @@ def Desine_Player_3D():
         glColor3fv(colors[i % len(colors)])
         for vertex in surface: glVertex3fv(vertices[vertex])
     glEnd()
-    glDisable(GL_LIGHTING) 
+    glDisable(GL_LIGHTING)
     glBegin(GL_LINES)
     glColor3fv((10,10,15))
     for edge in edges:
@@ -39,92 +36,64 @@ def Desine_Player_3D():
     glEnable(GL_LIGHTING)
 
 def Desine_Terrain_Grid():
-    glDisable(GL_LIGHTING) 
-    glColor3fv((0, 150, 200)) 
+    glDisable(GL_LIGHTING)
+    glColor3fv((0, 150, 200))
     glBegin(GL_LINES)
     for i in range(-20, 21, 2):
-        glVertex3f(i, -1, -20)
-        glVertex3f(i, -1, 20)
-        glVertex3f(-20, -1, i)
-        glVertex3f(20, -1, i)
+        glVertex3f(i, -1, -20); glVertex3f(i, -1, 20)
+        glVertex3f(-20, -1, i); glVertex3f(20, -1, i)
     glEnd()
     glEnable(GL_LIGHTING)
 
 # =============================================================================
-# DETE KRAZE TEKST UI (Heads-Up Display Interface Engine)
+# VRÈ NWAYO TRANSFÒMASYON TÈKS AN TÈKSTIRE 2D POU GPU A
 # =============================================================================
-def Render_HUD_Overlay(window, font, bold_font):
-    # Nou dwe fèmen 3D Pipeline la pou yon segonn pou n desine 2D UI a anlè l
-    glMatrixMode(GL_PROJECTION)
-    glPushMatrix()
-    glLoadIdentity()
-    gluOrtho2D(0, 800, 0, 600)
-    glMatrixMode(GL_MODELVIEW)
-    glPushMatrix()
-    glLoadIdentity()
-    glDisable(GL_LIGHTING)
-    glDisable(GL_DEPTH_TEST)
-
-    # 1. Desine gwo Tit Gason an nan foto a: NEON FALL 17
-    # Nou transfòme OpenGL an pygame sifas rapid nan background nan
-    surface_tit = bold_font.render("NEON FALL 17", True, (220, 50, 50)) # Neon Wouj
-    window.blit(surface_tit, (30, 540))
-
-    surface_sub = font.render("ONLINE MULTIPLAYER - OPEN WORLD", True, (150, 155, 165))
-    window.blit(surface_sub, (30, 515))
-
-    # 2. Desine Profil Jwè a (Header adwat nan foto a)
-    surface_profile = font.render("👤 NAYDER_01  [LEVEL 25]", True, (255, 255, 255))
-    window.blit(surface_profile, (550, 550))
+def Krey_Tekstire_Teks(text, font, text_color):
+    textSurface = font.render(text, True, text_color)
+    textData = pygame.image.tostring(textSurface, "RGBA", True)
+    width, height = textSurface.get_size()
     
-    surface_wallet = font.render("💳 53,860 CR  │  🪙 1,295 GD", True, (230, 180, 40)) # Koulè lò
-    window.blit(surface_wallet, (550, 525))
+    tex_id = glGenTextures(1)
+    glBindTexture(GL_TEXTURE_2D, tex_id)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textData)
+    return tex_id, width, height
 
-    # 3. Desine Bouton Taktik yo (Anba nan foto a)
-    surface_btn1 = font.render("[1. BUILD WEAPON]", True, (0, 210, 255)) # Cyan
-    window.blit(surface_btn1, (50, 40))
-
-    surface_btn2 = font.render("[2. TEST WEAPON]", True, (0, 255, 128)) # Vèt
-    window.blit(surface_btn2, (250, 40))
-
-    surface_btn3 = font.render("[3. SAVE LOADOUT]", True, (200, 200, 200))
-    window.blit(surface_btn3, (450, 40))
-
-    # Retounen nan sistèm 3D a nèt pou pwochen frame lan
-    glEnable(GL_DEPTH_TEST)
-    glEnable(GL_LIGHTING)
-    glMatrixMode(GL_PROJECTION)
-    glPopMatrix()
-    glMatrixMode(GL_MODELVIEW)
-    glPopMatrix()
+def Desine_Plak_HUD(tex_id, x, y, w, h):
+    glEnable(GL_TEXTURE_2D)
+    glBindTexture(GL_TEXTURE_2D, tex_id)
+    glBegin(GL_QUADS)
+    glTexCoord2f(0, 0); glVertex2f(x, y)
+    glTexCoord2f(1, 0); glVertex2f(x + w, y)
+    glTexCoord2f(1, 1); glVertex2f(x + w, y + h)
+    glTexCoord2f(0, 1); glVertex2f(x, y + h)
+    glEnd()
+    glDisable(GL_TEXTURE_2D)
 
 def main():
     pygame.init()
     pygame.font.init()
     LÈT, WOTÈ = 800, 600
-    window = pygame.display.set_mode((LÈT, WOTÈ), DOUBLEBUF | OPENGL)
-    pygame.display.set_caption("NAYDER ENGINE v0.0.41 - 3D HUD Dashboard Interface")
+    pygame.display.set_mode((LÈT, WOTÈ), DOUBLEBUF | OPENGL)
+    pygame.display.set_caption("NAYDER ENGINE v0.0.42 - Real 3D GPU HUD Overlay")
     clock = pygame.time.Clock()
 
-    # Chaje vrè Font sistèm yo pou UI a
-    font = pygame.font.SysFont("monospace", 13, bold=True)
-    bold_font = pygame.font.SysFont("monospace", 32, bold=True)
+    font = pygame.font.SysFont("monospace", 15, bold=True)
+    bold_font = pygame.font.SysFont("monospace", 36, bold=True)
+
+    # Konstwi vrè plak tèkstire yo yon sèl fwa pou VRAM lan
+    title_tex, tw, th = Krey_Tekstire_Teks("NEON FALL 17", bold_font, (220, 50, 50))
+    sub_tex, sw, sh = Krey_Tekstire_Teks("ONLINE MULTIPLAYER - OPEN WORLD", font, (150, 155, 165))
+    prof_tex, pw, ph = Krey_Tekstire_Teks("NAYDER_01 [LVL 25] | 53,860 CR", font, (230, 180, 40))
+    btn_tex, bw, bh = Krey_Tekstire_Teks("[1. BUILD WEAPON]   [2. TEST WEAPON]", font, (0, 210, 255))
 
     gluPerspective(45, (LÈT / WOTÈ), 0.1, 50.0)
     cam_x, cam_y, cam_z = 0.0, 0.0, -8.0
 
-    print("\n=======================================================")
-    print("    [NAYDER ENGINE v0.0.41] - 3D HUD INTERFACE LIVE")
-    print("=======================================================")
-    print(" [*] Home Screen Overlay -> ✅ PROJECTION MATRIX LINKED")
-    print(" [*] Font Textures VRAM   -> ✅ ALLOCATED FOR TEXTURE MAP")
-    print("-------------------------------------------------------")
-
     while True:
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
+            if event.type == pygame.QUIT: pygame.quit(); sys.exit()
 
         keys = pygame.key.get_pressed()
         if keys[pygame.K_w] or keys[pygame.K_UP]:    cam_z += 0.1
@@ -135,17 +104,29 @@ def main():
         glLoadIdentity()
         gluPerspective(45, (LÈT / WOTÈ), 0.1, 50.0)
         glTranslatef(cam_x, cam_y, cam_z)
-        glRotatef(1, 0, 1, 0) 
+        glRotatef(1, 0, 1, 0)
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glEnable(GL_DEPTH_TEST)
 
-        Configured_Neon_Lighting() 
+        Configured_Neon_Lighting()
         Desine_Terrain_Grid()
         Desine_Player_3D()
         
-        # Lanse sistèm UI Heads-Up Display a anlè sèn nan
-        Render_HUD_Overlay(window, font, bold_font)
+        # DESINE HUD AN 2D DIRECTEMAN ANLE SCENE LAN (Dynamic Ortho Matrix)
+        glMatrixMode(GL_PROJECTION); glPushMatrix(); glLoadIdentity(); gluOrtho2D(0, 800, 0, 600)
+        glMatrixMode(GL_MODELVIEW); glPushMatrix(); glLoadIdentity()
+        glDisable(GL_LIGHTING); glDisable(GL_DEPTH_TEST)
+        glColor3fv((255, 255, 255))
+
+        # Afiche plak tèkstire tèks yo sou ekran an vizyèlman
+        Desine_Plak_HUD(title_tex, 30, 530, tw, th)
+        Desine_Plak_HUD(sub_tex, 30, 500, sw, sh)
+        Desine_Plak_HUD(prof_tex, 480, 535, pw, ph)
+        Desine_Plak_HUD(btn_tex, 30, 30, bw, bh)
+
+        glEnable(GL_DEPTH_TEST); glEnable(GL_LIGHTING)
+        glMatrixMode(GL_PROJECTION); glPopMatrix(); glMatrixMode(GL_MODELVIEW); glPopMatrix()
 
         pygame.display.flip()
         clock.tick(107)
