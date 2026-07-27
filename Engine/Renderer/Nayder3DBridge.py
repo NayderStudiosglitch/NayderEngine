@@ -22,11 +22,11 @@ def Configured_Neon_Lighting():
 
     # 2. Defini Koulè ak Pozisyon Limyè Neon Cyan an nan espas la
     limye_pozisyon = [0.0, 5.0, 5.0, 1.0] # Plase anlè jwè a
-    limye_ambient = [0.1, 0.2, 0.4, 1.0]   # Ti klète fènwa nan background nan
+    limye_ambient = [0.2, 0.2, 0.3, 1.0]   # Ti klète fènwa nan background nan (GL_AMBIENT RANJE!)
     limye_diffuse = [0.0, 0.8, 1.0, 1.0]   # Gwo reyon Neon Cyan klere a
 
     glLightfv(GL_LIGHT0, GL_POSITION, limye_pozisyon)
-    glLightfv(GL_LIGHT0, GL_MIN_FILTER, limye_ambient)
+    glLightfv(GL_LIGHT0, GL_AMBIENT, limye_ambient)
     glLightfv(GL_LIGHT0, GL_DIFFUSE, limye_diffuse)
 
 def Desine_Player_3D():
@@ -38,7 +38,7 @@ def Desine_Player_3D():
     glEnd()
 
     # Desine liy fil nwa yo sou bòb bwat la
-    glDisable(GL_LIGHTING) # Fèmen limyè a tanporèman pou liy yo ka rete nwa fiks
+    glDisable(GL_LIGHTING) 
     glBegin(GL_LINES)
     glColor3fv((10,10,15))
     for edge in edges:
@@ -47,7 +47,7 @@ def Desine_Player_3D():
     glEnable(GL_LIGHTING)
 
 def Desine_Terrain_Grid():
-    glDisable(GL_LIGHTING) # Liy kadriyaj tè a ap gen koulè neon fiks pa yo
+    glDisable(GL_LIGHTING) 
     glColor3fv((0, 150, 200)) # Koulè liy tè a tounen Neon Blue k ap briye!
     glBegin(GL_LINES)
     for i in range(-20, 21, 2):
@@ -92,12 +92,12 @@ def main():
         glLoadIdentity()
         gluPerspective(45, (LÈT / WOTÈ), 0.1, 50.0)
         glTranslatef(cam_x, cam_y, cam_z)
-        glRotatef(1, 0, 1, 0) # Vire dousman pou n ka gade refleksyon limyè yo
+        glRotatef(1, 0, 1, 0) 
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glEnable(GL_DEPTH_TEST)
 
-        Configured_Neon_Lighting() # Limen gwo sistèm limyè a nan sèn lan
+        Configured_Neon_Lighting() 
         Desine_Terrain_Grid()
         Desine_Player_3D()
 
