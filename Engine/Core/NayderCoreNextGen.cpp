@@ -12,3 +12,4 @@ std::cout << " 🌍 [MAP DISPLACEMENT]: Desert Ghost City chaje 100% stable!" <<
 std::cout << " 🎮 [NEON FALL 17]: Ready to Play! Frame Locked at 107 FPS." << std::endl;
 std::cout << "=======================================================" << std::endl; } };
 int main() { Nayder3DPipelineBridge bridge; bridge.LoadBlenderWorldMap("desert_ghost_city.obj"); return 0; }
+engine_core.SimulateNPCCooperationEvent("SOLDIER_FIRE");
