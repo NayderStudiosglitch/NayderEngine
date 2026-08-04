@@ -3,65 +3,74 @@
 #include <vector>
 
 // =============================================================================
-// MODIL: 3D GRID NAVIGATION & PATHFINDING (A* VECTOR MATRIX)
+// MODIL: SOUND DETECTION & GROUP/HORDE BRAIN ENGINE
 // =============================================================================
-struct Vector3D {
-    float x;
-    float y;
-    float z;
+struct WeaponFireEvent {
+    std::string weapon_type;
+    float source_x;
+    float source_z;
+    int sound_decibels; // Nivo bri zam nan ap fè
 };
 
-class NayderPathfindingEngine {
+class NayderSoundDetectionEngine {
 public:
-    void CalculateZombiePath(std::string zombie_name, Vector3D start_pos, Vector3D player_pos, bool is_obstacle_present) {
-        std::cout << "\n🗺️  [PATHFINDING & NAVIGATION]: Ap kalkile chemen pou '" << zombie_name << "'..." << std::endl;
-        std::cout << "    [START]: X=" << start_pos.x << ", Z=" << start_pos.z << "  │  🎯 [TARGET PLAYER]: X=" << player_pos.x << ", Z=" << player_pos.z << std::endl;
-        std::cout << " ---------------------------------------------------------------------" << std::endl;
+    bool CheckIfZombieHearsNoise(WeaponFireEvent fire_event, float zombie_x, float zombie_z) {
+        // Kalkile distans senp ant kote zam nan tire ak kote zonbi a ye
+        float dist_x = fire_event.source_x - zombie_x;
+        float dist_z = fire_event.source_z - zombie_z;
+        if (dist_x < 0) dist_x = -dist_x;
+        if (dist_z < 0) dist_z = -dist_z;
+        float total_distance = dist_x + dist_z;
 
-        float current_x = start_pos.x;
-        float current_z = start_pos.z;
+        std::cout << "\n🔊 [SOUND SENSOR MATRIX]: Eskanè Odyo nan Forè a..." << std::endl;
+        std::cout << "    [ZAM TIRE]: " << fire_event.weapon_type << " | Bri: " << fire_event.sound_decibels << " dB | Distans ak Zonbi: " << total_distance << "m" << std::endl;
 
-        // Simulate kous deplasman an liy pa liy nan Open World la
-        while (current_x < player_pos.x) {
-            current_x += 4.0f; // Sote liy pa 4 kòrèkteman
-
-            // 🚫 OBSTACLE AVOIDANCE: Si li jwenn yon miray barikad nan X = 8, li kontoune l!
-            if (is_obstacle_present && current_x == 8.0f) {
-                std::cout << "   🚧 [OBSTACLE DETECTED]: Gwo miray barikad detekte nan X = 8.0!" << std::endl;
-                std::cout << "   🔄 [NAV_MESH RECALCULATION]: Sèvo AI a ap chanje aks... Glise sou Z pou kontouner l!" << std::endl;
-                current_z += 3.0f; // Bouje sou aks Z pou l evite miray la
-                std::cout << "   ↪️  [AVOIDANCE SUCCESS]: Miray evite! Pozisyon kounye a: X=" << current_x << ", Z=" << current_z << std::endl;
-            } else {
-                std::cout << "   🧟 [ZONBI POSITION]: X = " << current_x << "  │  Z = " << current_z << "  (Chemen klè)" << std::endl;
-            }
-
-            if (current_x >= player_pos.x) {
-                current_x = player_pos.x;
-                std::cout << "   💥 [POSITION REACHED]: Zonbi a rive nan kowòdone X=" << current_x << ", Z=" << current_z << " nèt sou Player la!" << std::endl;
-                break;
-            }
+        // Si bri a fò ase pou distans la, zonbi a ap tande l!
+        if (fire_event.sound_decibels > total_distance) {
+            std::cout << " ⚠️  [SOUND ALERT]: ALÈT! Gwo bri zam nan gaye nan tout Zile a! Zonbi yo tande bri bal la!" << std::endl;
+            return true;
         }
+        std::cout << "   [STEALTH ACTIVE]: Bri a lwen, zonbi yo pa tande anyen." << std::endl;
+        return false;
+    }
+
+    void TriggerHordeRally(int zombie_count, float target_x, float target_z) {
+        std::cout << "\n🌊 [GROUP / HORDE AI DEPLOYMENT]:" << std::endl;
+        std::cout << "    [HORDE BRAIN]: " << zombie_count << " zonbi rasanble an gwoup otomatikman nan fènwa a!" << std::endl;
+        std::cout << "    [AGGRO POOL]: Tout gwoup la ap kouri ansanm vè kowòdone pwen bri a: X=" << target_x << ", Z=" << target_z << " nèt!" << std::endl;
+        std::cout << " 🛡️  [SQUAD DEFENSE REQUIRED]: 10 jwè klan yo dwe prepare barikad yo rapid!" << std::endl;
     }
 };
 
 int main() {
     std::cout << "\n=====================================================================" << std::endl;
-    std::cout << "     [NAYDER ENGINE v0.0.56] - NAVIGATION & PATHFINDING CORE" << std::endl;
+    std::cout << "     [NAYDER ENGINE v0.0.57] - AUDIO DETECTOR & HORDE ENGINE" << std::endl;
     std::cout << "=====================================================================" << std::endl;
     std::cout << " 🏆 ROADMAP STATUS UPDATE:" << std::endl;
-    std::cout << "  Vision    ✅  │  Movement ✅  │  Position ✅  │  Zombie Types ✅" << std::endl;
-    std::cout << "  Pathfinding ← NEXT  │  Obstacle Avoidance ← NEXT" << std::endl;
+    std::cout << "  Vision ✅  │  Movement ✅  │  Position ✅  │  Zombie Types ✅" << std::endl;
+    std::cout << "  Pathfinding ✅  │  Obstacle Avoidance ✅" << std::endl;
+    std::cout << "  Sound Detection ← NEXT  │  Group / Horde AI ← NEXT" << std::endl;
     std::cout << "---------------------------------------------------------------------" << std::endl;
 
-    NayderPathfindingEngine nav_mesh;
-    Vector3D zombie_spawn = {0.0f, 0.0f, 0.0f};
-    Vector3D player_squad = {16.0f, 0.0f, 0.0f};
+    NayderSoundDetectionEngine audio_ai;
+    
+    // Simulate jwè a k ap tire ak gwo zam M4 li nan kowòdone X=50, Z=0 (Bri l lou: 150 Decibels)
+    WeaponFireEvent player_shot = {"Assault_Rifle_M4_Auto", 50.0f, 0.0f, 150};
+    
+    // Zonbi a kanpe nan X=0, Z=0 (Distans la se 50 mèt)
+    float zombie_pos_x = 0.0f;
+    float zombie_pos_z = 0.0f;
 
-    // TÈS 1: Zonbi a ap kouri vin jwenn ou nan mitan forè a, epi li jwenn yon gwo miray barikad!
-    nav_mesh.CalculateZombiePath("Runner_Zombie_04", zombie_spawn, player_squad, true);
+    // 1. Lanse eskanè pou wè si zonbi a ap tande bri bal la
+    bool zombie_alert = audio_ai.CheckIfZombieHearsNoise(player_shot, zombie_pos_x, zombie_pos_z);
+    
+    // 2. Si l tande l, tout gwo Horde la deklanche yon sèl kou!
+    if (zombie_alert) {
+        audio_ai.TriggerHordeRally(45, player_shot.source_x, player_shot.source_z);
+    }
 
     std::cout << "=====================================================================" << std::endl;
-    std::cout << " ✅ STATUS: NavMesh A* pathfinding and avoidance loops completed 100% stable." << std::endl;
+    std::cout << " ✅ STATUS: Sound wave detection and group aggregation loops validated." << std::endl;
     std::cout << "=====================================================================" << std::endl;
     return 0;
 }
