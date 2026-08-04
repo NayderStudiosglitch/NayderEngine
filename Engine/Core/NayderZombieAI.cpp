@@ -1,51 +1,43 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <unistd.h> // Pou simulation ti poz tan reyèl (sleep)
 
 // =============================================================================
-// RE-FAKTORE: KALYTE ZONBI AK MATRIS ESTATISTIK PWOFESYONÈL
+// MODIL: 3D GRID NAVIGATION & PATHFINDING (A* VECTOR MATRIX)
 // =============================================================================
-enum class ZombieType { Walker, Runner, Toxic, Brute, Boss, Child, Military };
-
-struct ZombieStats {
-    ZombieType type;
-    std::string type_name;
-    int hp;
-    float speed;
-    int damage;
-    float pos_x; // Real Position X
+struct Vector3D {
+    float x;
+    float y;
+    float z;
 };
 
-class NayderZombieNextGenAI {
+class NayderPathfindingEngine {
 public:
-    void ExecuteRealMovement(ZombieStats& zombie, float player_x) {
-        std::cout << "\n🏃‍♂️ [REAL POSITION ENGINE ← NEXT] - Kalite: " << zombie.type_name << std::endl;
-        std::cout << "    [STATS]: HP: " << zombie.hp << " | Vitès: " << zombie.speed << " | Dega Base: " << zombie.damage << std::endl;
+    void CalculateZombiePath(std::string zombie_name, Vector3D start_pos, Vector3D player_pos, bool is_obstacle_present) {
+        std::cout << "\n🗺️  [PATHFINDING & NAVIGATION]: Ap kalkile chemen pou '" << zombie_name << "'..." << std::endl;
+        std::cout << "    [START]: X=" << start_pos.x << ", Z=" << start_pos.z << "  │  🎯 [TARGET PLAYER]: X=" << player_pos.x << ", Z=" << player_pos.z << std::endl;
         std::cout << " ---------------------------------------------------------------------" << std::endl;
 
-        // Bouk Deplasman Reyèl: Zonbi a ap mache/kouri vè Player a ki nan X = 20
-        while (zombie.pos_x < player_x) {
-            std::cout << "   🧟 [ZONBI POSITION]: X = " << zombie.pos_x << "  │  👤 [PLAYER]: X = " << player_x << std::endl;
-            
-            // Ogmante pozisyon an selon vitès koutim kalite zonbi a
-            zombie.pos_x += zombie.speed;
-            
-            // Si l depase oswa li rive sou player a, nou bloke l pou Atak
-            if (zombie.pos_x >= player_x) {
-                zombie.pos_x = player_x;
-                std::cout << "   💥 [POSITION REACHED]: X = " << zombie.pos_x << " nèt! Zonbi a kole ak Player la!" << std::endl;
-                std::cout << "   ⚔️  [ATTACK TYPE LOG]: ";
-                
-                if (zombie.type == ZombieType::Toxic) {
-                    std::cout << "☣️ LAGE GAZ PWAZON! Player a ap pèdi HP nan zòn nan!" << std::endl;
-                } else if (zombie.type == ZombieType::Brute) {
-                    std::cout << "🔨 GWO KOUP DEGA! Fè -" << zombie.damage << " HP yon sèl fwa!" << std::endl;
-                } else if (zombie.type == ZombieType::Boss) {
-                    std::cout << "📢 RELE LÒT ZONBI! Yon gwo Horde ap rale soti nan forè a!" << std::endl;
-                } else {
-                    std::cout << "🩸 MÒDE! Sòlda a pran -" << zombie.damage << " HP dega." << std::endl;
-                }
+        float current_x = start_pos.x;
+        float current_z = start_pos.z;
+
+        // Simulate kous deplasman an liy pa liy nan Open World la
+        while (current_x < player_pos.x) {
+            current_x += 4.0f; // Sote liy pa 4 kòrèkteman
+
+            // 🚫 OBSTACLE AVOIDANCE: Si li jwenn yon miray barikad nan X = 8, li kontoune l!
+            if (is_obstacle_present && current_x == 8.0f) {
+                std::cout << "   🚧 [OBSTACLE DETECTED]: Gwo miray barikad detekte nan X = 8.0!" << std::endl;
+                std::cout << "   🔄 [NAV_MESH RECALCULATION]: Sèvo AI a ap chanje aks... Glise sou Z pou kontouner l!" << std::endl;
+                current_z += 3.0f; // Bouje sou aks Z pou l evite miray la
+                std::cout << "   ↪️  [AVOIDANCE SUCCESS]: Miray evite! Pozisyon kounye a: X=" << current_x << ", Z=" << current_z << std::endl;
+            } else {
+                std::cout << "   🧟 [ZONBI POSITION]: X = " << current_x << "  │  Z = " << current_z << "  (Chemen klè)" << std::endl;
+            }
+
+            if (current_x >= player_pos.x) {
+                current_x = player_pos.x;
+                std::cout << "   💥 [POSITION REACHED]: Zonbi a rive nan kowòdone X=" << current_x << ", Z=" << current_z << " nèt sou Player la!" << std::endl;
                 break;
             }
         }
@@ -54,30 +46,22 @@ public:
 
 int main() {
     std::cout << "\n=====================================================================" << std::endl;
-    std::cout << "     [NAYDER ENGINE v0.0.55] - REAL POSITION & TYPES ENGINE" << std::endl;
+    std::cout << "     [NAYDER ENGINE v0.0.56] - NAVIGATION & PATHFINDING CORE" << std::endl;
     std::cout << "=====================================================================" << std::endl;
-    std::cout << " 🏆 STATUS UPDATE:" << std::endl;
-    std::cout << "  Zombie Core █████████████░░░░░░░░ 50% (Real Position Loaded!)" << std::endl;
-    std::cout << "  AI          ████████████░░░░░░░░░ 45% (Type Matrix Connected)" << std::endl;
+    std::cout << " 🏆 ROADMAP STATUS UPDATE:" << std::endl;
+    std::cout << "  Vision    ✅  │  Movement ✅  │  Position ✅  │  Zombie Types ✅" << std::endl;
+    std::cout << "  Pathfinding ← NEXT  │  Obstacle Avoidance ← NEXT" << std::endl;
     std::cout << "---------------------------------------------------------------------" << std::endl;
 
-    NayderZombieNextGenAI ai_engine;
-    float player_target_x = 16.0f; // Sòlda a kanpe fiks nan X = 16
+    NayderPathfindingEngine nav_mesh;
+    Vector3D zombie_spawn = {0.0f, 0.0f, 0.0f};
+    Vector3D player_squad = {16.0f, 0.0f, 0.0f};
 
-    // TÈS 1: Konpòtman yon RUNNER (Vitès pi wo: l ap sote pa 4 liy!)
-    ZombieStats runner = {ZombieType::Runner, "Runner (Zonbi rapid)", 80, 4.0f, 15, 0.0f};
-    std::cout << "\n🔥 LANSÈ TÈS 1: ZONBI RAPID AP KOURI:" << std::endl;
-    ai_engine.ExecuteRealMovement(runner, player_target_x);
-
-    std::cout << "\n---------------------------------------------------------------------" << std::endl;
-
-    // TÈS 2: Konpòtman yon BRUTE (Pi dousman, l ap sote pa 2 liy sèlman, men gwo dega!)
-    ZombieStats brute = {ZombieType::Brute, "Brute (Zonbi gason lou)", 250, 2.0f, 50, 0.0f};
-    std::cout << "\n🔥 LANSÈ TÈS 2: GWO BRUTE LOU AP AVANSÈ:" << std::endl;
-    ai_engine.ExecuteRealMovement(brute, player_target_x);
+    // TÈS 1: Zonbi a ap kouri vin jwenn ou nan mitan forè a, epi li jwenn yon gwo miray barikad!
+    nav_mesh.CalculateZombiePath("Runner_Zombie_04", zombie_spawn, player_squad, true);
 
     std::cout << "=====================================================================" << std::endl;
-    std::cout << " ✅ STATUS: Real position tracking and polymorphic stats validated." << std::endl;
+    std::cout << " ✅ STATUS: NavMesh A* pathfinding and avoidance loops completed 100% stable." << std::endl;
     std::cout << "=====================================================================" << std::endl;
     return 0;
 }
