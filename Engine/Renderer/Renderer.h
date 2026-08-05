@@ -1,7 +1,5 @@
 #pragma once
 #include <string>
-
-// Ploge vrè Header GLFW pou kreyasyon fenèt nan nivo OS
 #include <GLFW/glfw3.h>
 
 class NayderOpenGLRenderer {
@@ -17,6 +15,11 @@ public:
     void HandleWindowPollEvents();
     bool ShouldWindowClose();
     void ClearScreenBuffer();
+    
+    // NEW HARDWARE PIPELINE ARRAY FUNCTIONS FOR v0.0.87
+    void SetupRealGraphicsPipeline();
+    void DrawHardwarePrimitiveTriangle();
+    
     void SwapHardwareBuffers();
     void TerminateGraphicsContext();
 };

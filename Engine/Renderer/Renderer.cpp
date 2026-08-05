@@ -10,18 +10,14 @@ bool NayderOpenGLRenderer::InitializeWindowContext(int width, int height, std::s
     screen_height = height;
     window_title = title;
 
-    // 1. INiSYALIZE GLFW LIBRERI A REYÈL
     if (!glfwInit()) {
         std::cerr << " 🚫 [OPENGL ERROR]: GLFW Initialization failed!" << std::endl;
         return false;
     }
 
-    // Konfigire OpenGL vèsyon 3.3 Core Profile nan nivo kat grafik (GPU)
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2); // Fallback to 2.1 Compatibility profile for pure legacy client states
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
 
-    // 2. KREYE VRÈ FÈNÈT LA SOU EKRAAN AN
     window = glfwCreateWindow(screen_width, screen_height, window_title.c_str(), nullptr, nullptr);
     if (!window) {
         std::cerr << " 🚫 [WINDOW ERROR]: Failed to create GLFW Real Window Graphic Box!" << std::endl;
@@ -29,28 +25,67 @@ bool NayderOpenGLRenderer::InitializeWindowContext(int width, int height, std::s
         return false;
     }
 
-    // Fè fenèt sa a tounen vrè kontèks OpenGL aktif pou kòd yo
     glfwMakeContextCurrent(window);
-    
-    // Aktive V-Sync pou bloke FPS la selon ekran w (oswa 107 FPS koutim pita)
-    glfwSwapInterval(1);
+    glfwSwapInterval(1); // Lock frame swap intervals to display monitor's hardware rate
 
     std::cout << "\n🪟 [REAL WINDOW RUNTIME ACTIVE]:" << std::endl;
     std::cout << " -> Window Node  : " << screen_width << "x" << screen_height << " HD Desktop Profile Mode" << std::endl;
-    std::cout << " -> GPU Context  : OpenGL 3.3 Core Profile initialized on VRAM cluster!" << std::endl;
+    std::cout << " -> GPU Context  : OpenGL Hardware pipeline initialized successfully!" << std::endl;
     std::cout << " -> STATUS       : ✅ Real Window successfully active on Chromebook screen!" << std::endl;
 
     return true;
 }
 
+void NayderOpenGLRenderer::SetupRealGraphicsPipeline() {
+    // Enable core 3D graphics parameters directly inside the hardware driver
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    
+    // Set viewport drawing projection metrics
+    glViewport(0, 0, screen_width, screen_height);
+    
+    std::cout << " 📐 [OPENGL MATRIX INITIALIZER]: Core hardware viewport bounds locked to rendering target indices." << std::endl;
+}
+
 void NayderOpenGLRenderer::ClearScreenBuffer() {
-    // Vrè kòmand OpenGL k ap netwaye ekran an ak yon bèl koulè Cyberpunk nwa/violèt
+    // Real hardware command wiping the screen buffer color channels using your deep dark matte profile
     glClearColor(0.05f, 0.05f, 0.08f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
+void NayderOpenGLRenderer::DrawHardwarePrimitiveTriangle() {
+    // 1. Pack pure tridimensional float vertex coordinate streams into system memory
+    static const float vertices[] = {
+         0.0f,  0.5f, 0.0f,  // Top node
+        -0.5f, -0.5f, 0.0f,  // Bottom left node
+         0.5f, -0.5f, 0.0f   // Bottom right node
+    };
+
+    // 2. Pack corresponding color data blocks (Red, Green, Blue interpolation maps)
+    static const float colors[] = {
+        1.0f, 0.0f, 0.0f,  // Red
+        0.0f, 1.0f, 0.0f,  // Green
+        0.0f, 0.0f, 1.0f   // Blue
+    };
+
+    // 3. Command the GPU state machine to accept client data pointer streams
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_COLOR_ARRAY);
+
+    // Bind array slots straight into active hardware vector layouts
+    glVertexPointer(3, GL_FLOAT, 0, vertices);
+    glColorPointer(3, GL_FLOAT, 0, colors);
+
+    // 4. EXECUTE LIVE HARDWARE RASTERIZATION DRAW CALL!
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    // Disable client state arrays to prevent pipeline cross-memory corruption
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_COLOR_ARRAY);
+}
+
 void NayderOpenGLRenderer::HandleWindowPollEvents() {
-    glfwPollEvents(); // Koute evènman klavye/sourit nan nivo OS
+    glfwPollEvents();
 }
 
 bool NayderOpenGLRenderer::ShouldWindowClose() {
@@ -58,7 +93,7 @@ bool NayderOpenGLRenderer::ShouldWindowClose() {
 }
 
 void NayderOpenGLRenderer::SwapHardwareBuffers() {
-    glfwSwapBuffers(window); // Vrè kòmand k ap chanje doub Frame-Buffers yo sou ekran an
+    glfwSwapBuffers(window);
 }
 
 void NayderOpenGLRenderer::TerminateGraphicsContext() {
