@@ -2,6 +2,7 @@
 #include "../Renderer/Shader.cpp"
 #include "../Renderer/OBJLoader.cpp"
 #include "../Renderer/Texture.cpp"
+#include "../Renderer/Lighting.cpp" // Linked modularly
 #include "Input.cpp"
 #include <iostream>
 
@@ -10,13 +11,13 @@ typedef void (APIENTRY *PFNGLBINDVERTEXARRAYPROC) (GLuint array);
 
 int main() {
     std::cout << "\n=======================================================" << std::endl;
-    std::cout << "     [NAYDER ENGINE v0.0.90] - NATIVE TEXTURE SAMPLER" << std::endl;
+    std::cout << "     [NAYDER ENGINE v0.0.91] - HARDWARE LIGHTING RUNTIME" << std::endl;
     std::cout << "=======================================================" << std::endl;
     std::cout << " 🏆 PHASE 5: REAL ENGINE RUNTIME UNLOCKED:" << std::endl;
-    std::cout << "  v0.0.88 Real Shader Compiler   -> \342\234\205 OPERATIONAL" << std::endl;
     std::cout << "  v0.0.89 Real Mesh Rendering    -> \342\234\205 OPERATIONAL" << std::endl;
-    std::cout << "  v0.0.90 Real Texture Rendering -> \342\234\205 ONLINE PA OU" << std::endl;
-    std::cout << "  v0.0.91 Real Lighting          -> \342\226\220 NEXT" << std::endl;
+    std::cout << "  v0.0.90 Real Texture Rendering -> \342\234\205 OPERATIONAL" << std::endl;
+    std::cout << "  v0.0.91 Real Lighting          -> \342\234\205 ONLINE PA OU" << std::endl;
+    std::cout << "  v0.0.92 Real Physics Context   -> \342\226\220 NEXT" << std::endl;
     std::cout << "-------------------------------------------------------" << std::endl;
 
     NayderOpenGLRenderer engine_runtime;
@@ -24,8 +25,9 @@ int main() {
     NayderShaderCompiler shader_compiler;
     NayderOBJLoader obj_loader;
     NayderTextureRuntime texture_system;
+    NayderLightingRuntime lighting_system;
 
-    if (!engine_runtime.InitializeWindowContext(1366, 768, "Neon Fall 17 - Hardware Texture Map v0.0.90")) {
+    if (!engine_runtime.InitializeWindowContext(1366, 768, "Neon Fall 17 - Hardware Shading v0.0.91")) {
         return -1;
     }
 
@@ -33,12 +35,10 @@ int main() {
     input_engine.ConfigureInputCallbacks(active_window);
     engine_runtime.SetupRealGraphicsPipeline();
 
-    // Compile GLSL code layers
     if (!shader_compiler.LoadAndCompileShaders("Assets/Shaders/Basic3D.vert", "Assets/Shaders/Basic3D.frag")) {
         return -1;
     }
 
-    // LOAD ACTUAL BMP TEXTURE INTO VRAM
     if (!texture_system.LoadRealBMPTexture("Assets/Textures/zombie_diffuse.bmp")) {
         return -1;
     }
@@ -49,16 +49,22 @@ int main() {
 
     PFNGLBINDVERTEXARRAYPROC  glBindVertexArray_ptr = (PFNGLBINDVERTEXARRAYPROC)glfwGetProcAddress("glBindVertexArray");
     
-    std::cout << "\n🎬 [REAL TEXTURED RUNTIME RUNNING]: Pushing color maps directly to active surfaces!" << std::endl;
-    std::cout << " -> The GPU is currently blitting raw textured pixels straight across the 3D geometry matrix!" << std::endl;
+    std::cout << "\n🎬 [REAL LIGHTED RUNTIME RUNNING]: Executing pixel shader vector dot products!" << std::endl;
+    std::cout << " -> The hardware is actively calculating specular and diffuse values across the meshes!" << std::endl;
 
-    // HARDCORE ACTIVE RENDERING LOOP
+    // HARDCORE INTERACTIVE RUNTIME RENDERING LOOP
     while (!engine_runtime.ShouldWindowClose()) {
         engine_runtime.ClearScreenBuffer();
 
         shader_compiler.UseShaderProgram();
 
-        // Bind the image data into active Texture Unit 0 prior to rendering submissions
+        // 1. Inject real sun parameters into the GLSL program variables every frame
+        // Simulating the warm orange sunset color scheme from your Escape Land artwork profile!
+        lighting_system.SetDirectionalSunUniforms(shader_compiler.ProgramID, -0.5f, -1.0f, -0.2f, 1.0f, 0.55f, 0.2f);
+        
+        // Pass simulated developer tracking view positions
+        lighting_system.UpdateCameraViewPositionUniform(shader_compiler.ProgramID, 0.0f, 2.0f, -5.0f);
+
         texture_system.BindTextureUnit(0);
 
         if (glBindVertexArray_ptr) {
