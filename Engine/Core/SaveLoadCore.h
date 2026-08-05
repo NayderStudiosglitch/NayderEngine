@@ -5,9 +5,15 @@ struct GameSaveStateNode {
     int survival_day;
     int player_hp;
     int player_armor;
-    int current_ammo;
-    int reserve_ammo;
     int total_zombies_killed;
+    
+    // v0.1.8 SPECIFIC EXTENDED INVENTORY STATE MARKERS
+    int active_equipped_slot_index;
+    int primary_m4_clip;
+    int primary_m4_reserve;
+    int secondary_pistol_clip;
+    int secondary_pistol_reserve;
+    
     std::string active_world_map;
 };
 
