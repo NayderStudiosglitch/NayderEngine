@@ -7,25 +7,27 @@
 #include "../Physics/Collision.cpp"
 #include "../Audio/Audio.cpp"
 #include "../AI/ZombieAI.cpp"
-#include "../Network/MultiplayerLobby.cpp" // Interlocking real lobby management layers modularly
+#include "../AI/WaveDirector.cpp"
 #include "Input.cpp"
 #include "GameLoop.cpp"
 #include "WeaponSystem.cpp"
 #include "HealthSystem.cpp"
 #include <iostream>
 #include <vector>
+#include <cmath>
 
 typedef void (APIENTRY *PFNGLDRAWELEMENTSPROC) (GLenum mode, GLsizei count, GLenum type, const void* indices);
 typedef void (APIENTRY *PFNGLBINDVERTEXARRAYPROC) (GLuint array);
 
 int main() {
     std::cout << "\n=======================================================" << std::endl;
-    std::cout << "     [NEON FALL 17 v0.3.0] - MULTIPLAYER LOBBY RUNTIME" << std::endl;
+    std::cout << "     [NEON FALL 17 v0.4.0] - DYNAMIC WAVE MODE" << std::endl;
     std::cout << "=======================================================" << std::endl;
-    std::cout << " 🏆 NETWORK PRODUCTION MARKS ONLINE:" << std::endl;
+    std::cout << " 🏆 PRODUCTION GAMEPLAY PROGRESS MAP:" << std::endl;
     std::cout << "  v0.2.0 Neon Fall 17 Alpha Build -> \342\234\205 COMPLETE" << std::endl;
-    std::cout << "  v0.3.0 Multiplayer Lobby Core   -> \342\234\205 ONLINE PA OU" << std::endl;
-    std::cout << "  v0.4.0 Zombie Wave Mode Logic   -> \342\226\220 NEXT" << std::endl;
+    std::cout << "  v0.3.0 Multiplayer Lobby Core   -> \342\234\205 COMPLETE" << std::endl;
+    std::cout << "  v0.4.0 Zombie Wave Mode Logic   -> \342\234\205 ONLINE PA OU" << std::endl;
+    std::cout << "  v0.5.0 Full Playtest Build Core -> \342\226\220 NEXT TARGET" << std::endl;
     std::cout << "-------------------------------------------------------" << std::endl;
 
     NayderOpenGLRenderer engine_runtime;
@@ -37,13 +39,13 @@ int main() {
     NayderZombieAIEngine zombie_ai;
     NayderWeaponSystem combat_system;
     NayderHealthSystem vital_system;
+    NayderWaveDirector game_director;
     NayderHUDRenderer hud_engine;
-    NayderMultiplayerLobby server_lobby;
     CollisionSystem physics_system;
     NayderAudioRuntime audio_system;
     NayderGameLoopClock engine_clock(107.0);
 
-    if (!engine_runtime.InitializeWindowContext(1366, 768, "Neon Fall 17 - Multiplayer Matchmaking v0.3.0")) {
+    if (!engine_runtime.InitializeWindowContext(1366, 768, "Neon Fall 17 - Hardcore Wave Mode v0.4.0")) {
         return -1;
     }
 
@@ -65,96 +67,73 @@ int main() {
     unsigned int VAO, VBO, EBO;
     obj_loader.UploadMeshToGPU(zombie_mesh, VAO, VBO, EBO);
 
-    // =============================================================================
-    // 🌐 LOBBY GOAL 1 & 2: JOIN SERVER MATCHMAKING ROOMS
-    // =============================================================================
-    std::cout << "\n🌐 [SERVER INITIALIZER]: Booting matchmaking socket adapters..." << std::endl;
-    int p1_id = server_lobby.ProcessClientJoinRequest("NAYDER_01"); // Host local node
-    int p2_id = server_lobby.ProcessClientJoinRequest("CLAN_MEMBER_02");
-    int p3_id = server_lobby.ProcessClientJoinRequest("CLAN_BRO_03");
-
-    // =============================================================================
-    // 🛡️ LOBBY GOAL 3: JOIN TEAM VECTOR REPLICATION SLOTS
-    // =============================================================================
-    server_lobby.AssignPlayerToTacticalTeam(p1_id, TeamTeam::SQUAD_ALPHA);
-    server_lobby.AssignPlayerToTacticalTeam(p2_id, TeamTeam::SQUAD_ALPHA);
-    server_lobby.AssignPlayerToTacticalTeam(p3_id, TeamTeam::SQUAD_BRAVO);
-
     EntityHealthPool player_vitals = { "NAYDER_01", 100, 100, 75, 75, false };
     WeaponProfile primary_m4 = combat_system.EquipWeaponPreset(WeaponType::ASSAULT_RIFLE);
+    
+    WaveConfig current_session_waves = { 0, 0, 0, false, 0.0f };
+    BarricadeNode sandbag_gate = { "Choke_Point_Sandbags", 6.0f, 150, 150, false };
 
     std::vector<ZombieEntityNode> dynamic_horde;
-    dynamic_horde.push_back({ 1, "Zombie_Runner", 14.0f, 4.0f, 25 }); // Set up single runner for proxy tests
+    game_director.InitializeNewWave(current_session_waves, dynamic_horde);
 
     BoxCollider player_collider = {0.0f, 0.0f, 0.0f, 1.0f, 2.0f, 1.0f};
     PFNGLBINDVERTEXARRAYPROC  glBindVertexArray_ptr = (PFNGLBINDVERTEXARRAYPROC)glfwGetProcAddress("glBindVertexArray");
     
     bool space_was_released = true;
-    int total_kills_score = 0;
+    int current_wave_kills = 0;
 
-    std::cout << "\n🎮 [LOBBY HANDSHAKES SYNCHRONIZED] -> MATCH STARTING NOW!" << std::endl;
+    std::cout << "\n🎮 [WAVE SIMULATOR DEPLOYED] -> CHOKE POINT DEFENSE COMMENCING!" << std::endl;
 
-    // MASTER ENGINE RUNTIME TICK GAME LOOP
-    while (!engine_runtime.ShouldWindowClose()) {
+    while (!engine_runtime.ShouldWindowClose() && !player_vitals.is_dead) {
         engine_clock.TickClockStart();
         float dt = engine_clock.GetDeltaTime();
 
-        // Fetch local client data from our lobby registry loops to update respawn clocks
-        auto& clients = server_lobby.GetLobbyClientsPool();
-
-        // -----------------------------------------------------------------
-        // ⏳ LOBBY GOAL 4: CONDITION ALARM AND PLAYER RESPAWN SYSTEM SCRIPT
-        // -----------------------------------------------------------------
-        if (player_vitals.is_dead) {
-            if (clients[0].net_state != ConnectionState::SPECTATING_DEAD) {
-                clients[0].net_state = ConnectionState::SPECTATING_DEAD;
-                clients[0].respawn_timer = 5.0f; // 5-Second tactical respawn window penalty loop
-            }
-            
-            // Run system clock countdown tick
-            server_lobby.ProcessRespawnTimerTicks(clients[0], dt, player_collider.x);
-            
-            if (clients[0].net_state == ConnectionState::IN_MATCH) {
-                // Restore vital pools completely when respawn clock clears
-                player_vitals.current_hp = 100;
-                player_vitals.current_armor = 75;
-                player_vitals.is_dead = false;
+        if (!current_session_waves.wave_in_progress) {
+            current_session_waves.next_wave_cooldown -= dt;
+            if (current_session_waves.next_wave_cooldown <= 0.0f) {
+                current_wave_kills = 0;
+                game_director.InitializeNewWave(current_session_waves, dynamic_horde);
             }
         }
 
-        // Only allow positional matrix translation if the player is alive inside the match session
-        if (!player_vitals.is_dead) {
-            if (NayderInputSystem::key_states[GLFW_KEY_W]) {
-                player_collider.x += 4.5f * dt;
-            }
+        if (NayderInputSystem::key_states[GLFW_KEY_W]) {
+            player_collider.x += 4.5f * dt;
+        }
 
-            // Pathfinding processing vectors
+        if (current_session_waves.wave_in_progress) {
             zombie_ai.ProcessHordePathfindingTick(dynamic_horde, player_collider.x, dt);
-
-            // Proximity threat evaluations
-            float distance = std::abs(dynamic_horde[0].pos_x - player_collider.x);
-            if (distance <= 1.8f) {
-                vital_system.ApplyDamageToPlayer(player_vitals, dynamic_horde[0].attack_damage);
-            }
-
-            // Weapon triggers
-            if (NayderInputSystem::key_states[GLFW_KEY_SPACE]) {
-                if (space_was_released) {
-                    if (combat_system.PullTriggerLoop(primary_m4, dt)) {
-                        audio_system.PlayRealWavFile("Assets/Audio/weapon_fire.wav");
-                        if (std::abs(dynamic_horde[0].pos_x - player_collider.x) < 25.0f) {
-                            total_kills_score++;
-                            dynamic_horde[0].pos_x = player_collider.x + 20.0f; // Force push respawn coordinate on zombie node
-                        }
+            
+            for (size_t i = 0; i < dynamic_horde.size(); ++i) {
+                if (!sandbag_gate.is_destroyed) {
+                    game_director.EvaluateBarricadeIntersections(sandbag_gate, dynamic_horde[i].pos_x, dynamic_horde[i].attack_damage, dt);
+                    if (dynamic_horde[i].pos_x <= sandbag_gate.pos_x + 1.0f) {
+                        dynamic_horde[i].pos_x = sandbag_gate.pos_x + 1.0f;
                     }
-                    space_was_released = false;
                 }
-            } else {
-                space_was_released = true;
+                
+                if (sandbag_gate.is_destroyed) {
+                    float dist = std::abs(dynamic_horde[i].pos_x - player_collider.x);
+                    if (dist <= 1.8f) {
+                        vital_system.ApplyDamageToPlayer(player_vitals, dynamic_horde[i].attack_damage);
+                    }
+                }
             }
         }
 
-        // Frame rendering submissions
+        if (NayderInputSystem::key_states[GLFW_KEY_SPACE] && current_session_waves.wave_in_progress) {
+            if (space_was_released) {
+                if (combat_system.PullTriggerLoop(primary_m4, dt)) {
+                    audio_system.PlayRealWavFile("Assets/Audio/weapon_fire.wav");
+                    current_wave_kills++;
+                    std::cout << " 🎯 [COMBAT RECORD]: Kill Progress: " << current_wave_kills << " / " << current_session_waves.total_zombies_this_wave << std::endl;
+                    game_director.EvaluateWaveVictoryConditions(current_session_waves, current_wave_kills);
+                }
+                space_was_released = false;
+            }
+        } else {
+            space_was_released = true;
+        }
+
         engine_runtime.ClearScreenBuffer();
         shader_compiler.UseShaderProgram();
 
@@ -162,10 +141,16 @@ int main() {
         lighting_system.UpdateCameraViewPositionUniform(shader_compiler.ProgramID, player_collider.x, 2.0f, -5.0f);
         texture_system.BindTextureUnit(0);
 
-        if (glBindVertexArray_ptr) { glBindVertexArray_ptr(VAO); }
-        glDrawElements(GL_TRIANGLES, zombie_mesh.total_indices, GL_UNSIGNED_INT, 0);
+        if (glBindVertexArray_ptr) { 
+            glBindVertexArray_ptr(VAO); 
+        }
+        
+        if (current_session_waves.wave_in_progress) {
+            for (size_t i = 0; i < dynamic_horde.size(); ++i) {
+                glDrawElements(GL_TRIANGLES, zombie_mesh.total_indices, GL_UNSIGNED_INT, 0);
+            }
+        }
 
-        // Render pass 2: HUD Dashboard
         hud_engine.SetOrthographicProjection();
         
         HUDLiveStats overlay_packet;
@@ -176,11 +161,14 @@ int main() {
         overlay_packet.clip_ammo = primary_m4.current_clip;
         overlay_packet.max_clip = primary_m4.clip_capacity;
         overlay_packet.reserve_ammo = primary_m4.reserve_ammo;
-        overlay_packet.total_kills = total_kills_score;
+        overlay_packet.total_kills = current_wave_kills;
         overlay_packet.current_fps = engine_clock.GetCurrentFPS();
         
-        // Print active squad configuration label onto screen overlays!
-        overlay_packet.objective = (player_vitals.is_dead) ? "RESPAWNING IN COOLDOWN..." : "TEAM: SQUAD_ALPHA │ SECTOR: CITY";
+        if (!current_session_waves.wave_in_progress) {
+            overlay_packet.objective = "NEXT WAVE INCOMING IN: " + std::to_string(static_cast<int>(current_session_waves.next_wave_cooldown)) + "s";
+        } else {
+            overlay_packet.objective = "WAVE " + std::to_string(current_session_waves.current_wave) + " │ BARRICADE: " + (sandbag_gate.is_destroyed ? "BREACHED" : std::to_string(sandbag_gate.current_durability) + " HP");
+        }
 
         hud_engine.RenderHUDDashboard(overlay_packet);
         hud_engine.RestorePerspectiveProjection();
