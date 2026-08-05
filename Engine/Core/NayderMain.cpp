@@ -2,43 +2,43 @@
 #include "../Renderer/OBJLoader.cpp"
 #include "../Renderer/Texture.cpp"
 #include "../Renderer/Material.cpp"
+#include "../Renderer/Lighting.cpp"
+#include "../Renderer/Shadows.cpp"
 #include "Camera.cpp"
 #include <iostream>
 
 int main() {
     std::cout << "\n=======================================================" << std::endl;
-    std::cout << "     [NAYDER ENGINE v0.0.70] - CUSTOM MATERIAL PROFILE" << std::endl;
+    std::cout << "     [NAYDER ENGINE v0.0.72] - REAL-TIME SHADOW MAPPING" << std::endl;
     std::cout << "=======================================================" << std::endl;
-    std::cout << " 🏆 PRODUCTION PIPELINE STATUS MAP:" << std::endl;
-    std::cout << "  v0.0.68 OBJ Model Loader -> \342\234\205 ONLINE" << std::endl;
-    std::cout << "  v0.0.69 Texture System   -> \342\234\205 ONLINE" << std::endl;
-    std::cout << "  v0.0.70 Material System  -> \342\234\205 ONLINE PA OU" << std::endl;
-    std::cout << "  v0.0.71 Lighting Engine  -> \342\226\220 NEXT" << std::endl;
+    std::cout << " 🏆 ADVANCED GRAPHICS STACK COMPLETE:" << std::endl;
+    std::cout << "  v0.0.70 Material System  -> \342\234\205 ONLINE" << std::endl;
+    std::cout << "  v0.0.71 Lighting Engine  -> \342\234\205 ONLINE" << std::endl;
+    std::cout << "  v0.0.72 Shadow Mapping   -> \342\234\205 ONLINE PA OU" << std::endl;
+    std::cout << "  v0.0.73 Terrain Renderer -> \342\226\220 NEXT" << std::endl;
     std::cout << "-------------------------------------------------------" << std::endl;
 
-    // Inisyalize tout gwo modil motè a
     NayderOpenGLRenderer renderer;
     NayderOBJLoader obj_loader;
     NayderTextureSystem texture_engine;
     NayderMaterialSystem material_engine;
+    NayderLightingEngine lighting_engine;
+    NayderShadowEngine shadow_engine;
 
-    // 1. Chaje modèl Blender yo
-    CompiledMesh sniper_mesh = obj_loader.ParseOBJFile("Assets/Models/soldier.obj");
-    CompiledMesh house_mesh = obj_loader.ParseOBJFile("Assets/Models/house.obj");
+    // Load assets and light sources
+    CompiledMesh house = obj_loader.ParseOBJFile("Assets/Models/house.obj");
+    DirectionalLight sun = lighting_engine.CreateSunlight(-0.5f, -1.0f, -0.2f, "SUNSET_CYBERPUNK");
+    
+    // 1. Initialize the specialized Next-Gen Shadow Buffers
+    ShadowFrameBuffer shadow_buffer = shadow_engine.InitializeShadowBuffer();
 
-    // 2. Chaje Tèkstire yo
-    TextureData weapon_tex = texture_engine.LoadTextureFromFile("Assets/Textures/soldier_skin.png");
-    TextureData house_tex = texture_engine.LoadTextureFromFile("Assets/Textures/house_brick.jpg");
+    // 2. RUN PASS 1: Render scene from the sunlight's eye to extract depth metrics
+    shadow_engine.ExecuteFirstPassDepthRender(house.model_name, sun.dir_x, sun.dir_y, sun.dir_z);
 
-    // 3. Konstwi vrè Materyo Next-Gen yo ak bèl koyefisyan koutim yo!
-    Material rifle_material = material_engine.CreateCustomMaterial("M4_Neon_Fall_Steel", 101, "METALLIC_WEAPON");
-    Material wall_material = material_engine.CreateCustomMaterial("Abandond_House_Planks", 102, "ROUGH_WOOD");
+    // 3. RUN PASS 2: Switch viewpoint to player camera, cross-examine data, and draw shadows!
+    shadow_engine.ExecuteSecondPassShadowSample();
 
-    // 4. Aplike materyo yo sou Shader GPU a anlè sèn nan anvan draw call la kouri
-    material_engine.ApplyMaterialToShader(rifle_material);
-    material_engine.ApplyMaterialToShader(wall_material);
-
-    std::cout << "\n🎬 [RASTER EXECUTION]: Swapping double frame-buffers with custom material passes..." << std::endl;
+    std::cout << "\n🎬 [GPU MAIN PIPELINE]: Swapping frame buffers with real-time shadow projection map loops..." << std::endl;
     renderer.SwapFrameBuffers();
 
     std::cout << "=======================================================" << std::endl;
