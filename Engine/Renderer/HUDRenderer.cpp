@@ -1,26 +1,45 @@
 #include "HUDRenderer.h"
 #include <iostream>
+
 NayderHUDRenderer::NayderHUDRenderer() {}
+
 void NayderHUDRenderer::SetOrthographicProjection() {
-    std::cout << "\n[HUD ENGINE]: Matrix Mode Swapped to Orthographic." << std::endl;
-    std::cout << " -> Switching GPU pipeline from 3D to Flat 2D Screen Space." << std::endl;
+    // Overriding projection parameters to 2D Screen Space bypassing 3D depth buffers
+    std::cout << "\n🎛️  [HUD RENDER MATRIX]: Overriding projection parameters to 2D Orthographic Mode..." << std::endl;
 }
-void NayderHUDRenderer::RenderHUDDashboard(const HUDPlayerStats& stats) {
-    std::cout << "\n📺 [UI CANVAS RASTERIZER]: Rendering screen overlay components..." << std::endl;
-    std::cout << " ┌─────────────────────────────────────────────────────────────────────────────┐" << std::endl;
-    std::cout << " │  SYSTEM COUNTER: [ FPS: " << stats.fps_lock << " ]  │  NETWORK NODE: [ PING: " << stats.network_ping << "ms ]              │" << std::endl;
-    std::cout << " ┌─────────────────────────────────────────────────────────────────────────────┘" << std::endl;
-    std::cout << "  [VITAL MATRIX - BOTTOM LEFT]:" << std::endl;
-    std::cout << "   ├── HP BAR     : [██████████░░] " << stats.hp << " HP" << std::endl;
-    std::cout << "   └── ARMOR BAR  : [████████░░░░] " << stats.armor << " AR" << std::endl;
-    std::cout << "  [AMMO & EQUIPMENT - BOTTOM RIGHT]:" << std::endl;
-    std::cout << "   ├── CLIP VALUE : " << stats.current_ammo << " / " << stats.reserve_ammo << " (AUTOMATIC)" << std::endl;
-    std::cout << "   └── GRENADES   : x" << stats.grenades << " Frag Units" << std::endl;
-    std::cout << "  [VIEWPORT SCREEN CENTER]:" << std::endl;
-    std::cout << "   ├── CROSSHAIR  : Projected central target vector node: [+]" << std::endl;
-    std::cout << "   ├── MINI-MAP   : Active radar box sampling world entities." << std::endl;
-    std::cout << "   └── OBJECTIVE  : " << stats.current_objective << std::endl;
+
+void NayderHUDRenderer::RenderHUDDashboard(const HUDLiveStats& stats) {
+    // Calculate the absolute viewport center for the crosshair layout
+    int center_x = 1366 / 2;
+    int center_y = 768 / 2;
+
+    std::cout << "📺 [HUD DASHBOARD REPLICATION]: Printing live screen interface layout arrays..." << std::endl;
+    std::cout << " +----------------------------------------------------------------------+" << std::endl;
+    std::cout << " |  FPS: " << stats.current_fps << " Lock (BOULE LWEN)  │  OBJECTIVE: " << stats.objective << "  |" << std::endl;
+    std::cout << " +----------------------------------------------------------------------+" << std::endl;
+    
+    // Compute HP visual block increments
+    std::cout << " |  HP    : [";
+    int hp_blocks = stats.current_hp / 10;
+    for (int i = 0; i < 12; ++i) { if (i < hp_blocks) std::cout << "█"; else std::cout << "░"; }
+    std::cout << "] " << stats.current_hp << " / " << stats.max_hp << " HP                          |" << std::endl;
+
+    // Compute Armor visual block increments
+    std::cout << " |  ARMOR : [";
+    int armor_blocks = stats.current_armor / 10;
+    for (int i = 0; i < 10; ++i) { if (i < armor_blocks) std::cout << "█"; else std::cout << "░"; }
+    std::cout << "] " << stats.current_armor << " / " << stats.max_armor << " AR                          |" << std::endl;
+
+    std::cout << " +----------------------------------------------------------------------+" << std::endl;
+    std::cout << " |  AMMO  : " << stats.clip_ammo << " / " << stats.reserve_ammo << " (AUTO)   │  ZOMBIES ELIMINATED: x" << stats.total_kills << "            |" << std::endl;
+    std::cout << " +----------------------------------------------------------------------+" << std::endl;
+
+    // v0.1.6 CENTRAL COMBAT CROSSHAIR CALCULATOR
+    std::cout << "\n🎯 [CROSSHAIR SYSTEM - v0.1.6]:" << std::endl;
+    std::cout << " ├── Viewport Midpoint Node Locked at Coordinate: (" << center_x << ", " << center_y << ")" << std::endl;
+    std::cout << " └── Raycast Target Crosshair Projected ->      [ + ]" << std::endl;
 }
+
 void NayderHUDRenderer::RestorePerspectiveProjection() {
-    std::cout << "\n[HUD ENGINE]: Matrix Restoration -> 3D Viewport restored." << std::endl;
+    std::cout << "🔄 [HUD RENDER MATRIX]: Popping 2D frames. Perspective depth buffers restored." << std::endl;
 }
