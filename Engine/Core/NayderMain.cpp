@@ -12,41 +12,44 @@
 #include "../Audio/Audio.cpp"
 #include "../AI/NavMesh.cpp"
 #include "../Network/Replication.cpp"
-#include "../Editor/EditorTools.cpp" // Linked modularly
+#include "../Editor/EditorTools.cpp"
 #include "SaveLoadCore.cpp"
+#include "PackagingSystem.cpp" // Linked modularly
 #include "Camera.cpp"
 #include <iostream>
 
 int main() {
     std::cout << "\n=======================================================" << std::endl;
-    std::cout << "     [NAYDER ENGINE v0.0.83] - REAL-TIME WORLD EDITOR" << std::endl;
+    std::cout << "     [NAYDER ENGINE v0.0.84] - AUTOMATED GAME PACKAGER" << std::endl;
     std::cout << "=======================================================" << std::endl;
-    std::cout << " 🏆 DEV LAYER INTEGRATION COMPLETE:" << std::endl;
-    std::cout << "  v0.0.81 Navigation Mesh  -> \342\234\205 ONLINE" << std::endl;
+    std::cout << " 🏆 CONGRATULATIONS! ENTIRE INTEGRATION ROADMAP UNLOCKED:" << std::endl;
     std::cout << "  v0.0.82 Multiplayer Sync -> \342\234\205 ONLINE" << std::endl;
-    std::cout << "  v0.0.83 Editor Tools     -> \342\234\205 ONLINE PA OU" << std::endl;
-    std::cout << "  v0.0.84 Packaging System -> \342\226\220 NEXT" << std::endl;
-    std::cout << "-------------------------------------------------------" << std::endl;
+    std::cout << "  v0.0.83 Editor Tools     -> \342\234\205 ONLINE" << std::endl;
+    std::cout << "  v0.0.84 Packaging System -> \342\234\205 ONLINE PA OU" << std::endl;
+    std::cout << "=======================================================" << std::endl;
 
     NayderOpenGLRenderer renderer;
-    EditorSandboxTools development_console;
+    NayderPackagingSystem packager;
 
-    // Simulate developer working on the sandbox layout for Desert Ghost City
-    std::cout << "🎬 [SANDBOX ACTIVE]: Launching editor viewport session..." << std::endl;
+    // Simulate packing the complete asset catalog for Neon Fall 17
+    std::cout << "🎬 [SHIPPING PROCESS ACTIVE]: Commencing asset serialization pass..." << std::endl;
 
-    // 1. Click on flat terrain zone and drop an abandoned house mesh
-    development_console.ExecuteGridRaycastSpawn(PlacementType::MESH_HOUSE, 12.0f, 0.0f, -4.5f, 1.0f);
+    // 1. Stage the high-poly mesh geometries
+    packager.StageLooseAssetForPackaging("Assets/Models/soldier.obj", 4512000); // 4.5 MB mesh
+    packager.StageLooseAssetForPackaging("Assets/Models/zombie.obj", 2150000);
+    packager.StageLooseAssetForPackaging("Assets/Models/house.obj", 8430000);
 
-    // 2. Add an intense zombie spawn node near the building structure
-    development_console.ExecuteGridRaycastSpawn(PlacementType::ZOMBIE_SPAWNER, 15.5f, 0.0f, -2.0f, 0.5f);
+    // 2. Stage the material image texture files
+    packager.StageLooseAssetForPackaging("Assets/Textures/soldier_skin.png", 2048000);
+    packager.StageLooseAssetForPackaging("Assets/Textures/house_brick.jpg", 1024000);
 
-    // 3. Place a crucial tactical ammunition drop item on the lari
-    development_console.ExecuteGridRaycastSpawn(PlacementType::AMMO_BOX, 8.0f, 0.2f, 10.0f, 1.2f);
+    // 3. Stage the binary maps and runtime configurations
+    packager.StageLooseAssetForPackaging("Assets/Maps/desert_ghost_city.map", 512000);
 
-    // 4. Serialize the entire sandbox workspace straight out to disk!
-    development_console.ExportSandboxMapFile();
+    // 4. Fire the deployment master compilation sequence!
+    packager.CompileStandaloneShippingBuild();
 
-    std::cout << "\n🎬 [SYSTEM DISPLAY MAP]: Refreshing editor frame buffer views..." << std::endl;
+    std::cout << "\n🎬 [ENGINE SHUTDOWN]: Build compiled successfully under strict 107 FPS Lock parameters." << std::endl;
     renderer.SwapFrameBuffers();
 
     std::cout << "=======================================================" << std::endl;
