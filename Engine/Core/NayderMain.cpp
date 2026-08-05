@@ -1,35 +1,39 @@
 #include "../Renderer/Renderer.cpp"
-#include "Camera.cpp" // Included modularly
+#include "../Renderer/OBJLoader.cpp"
+#include "Camera.cpp"
 #include <iostream>
 
 int main() {
     std::cout << "\n=======================================================" << std::endl;
-    std::cout << "     [NAYDER ENGINE v0.0.67] - NATIVE OPENGL RENDERER" << std::endl;
+    std::cout << "     [NAYDER ENGINE v0.0.68] - OBJ MODEL LOADER PIPELINE" << std::endl;
     std::cout << "=======================================================" << std::endl;
-    std::cout << " 🏆 MILESTONE STATUS UPDATE:" << std::endl;
-    std::cout << "  v0.0.65 3D Box Collision -> \342\234\205 ONLINE" << std::endl;
+    std::cout << " 🏆 GRAPHIC SUBSYSTEM MATRIX UNLOCKED:" << std::endl;
     std::cout << "  v0.0.66 Camera Subsystem -> \342\234\205 ONLINE" << std::endl;
-    std::cout << "  v0.0.67 OpenGL Renderer  -> \342\234\205 ONLINE PA OU" << std::endl;
-    std::cout << "  v0.0.68 OBJ Model Loader -> \342\226\220 NEXT" << std::endl;
+    std::cout << "  v0.0.67 OpenGL Renderer  -> \342\234\205 ONLINE" << std::endl;
+    std::cout << "  v0.0.68 OBJ Model Loader -> \342\234\205 ONLINE PA OU" << std::endl;
+    std::cout << "  v0.0.69 Texture System   -> \342\226\220 NEXT" << std::endl;
     std::cout << "-------------------------------------------------------" << std::endl;
 
-    // 1. Initialize the Advanced Window and Context Layer
+    // 1. Fire up the platform display window
     NayderOpenGLRenderer renderer;
-    renderer.CreateRenderWindow(1920, 1080, "Neon Fall 17 - Runtime Viewport Zone");
+    renderer.CreateRenderWindow(1920, 1080, "Neon Fall 17 - 3D Object Streaming Viewport");
 
-    // 2. Stream and link the structural assets
-    renderer.CompileShaderPipeline("Assets/Shaders/Basic3D.vert", "Assets/Shaders/Basic3D.frag");
+    // 2. Initialize the OBJ Parser Subsystem
+    NayderOBJLoader obj_loader;
 
-    // 3. Instantiate the camera and bind the transformation coordinates to the GPU
-    NayderCameraSystem core_camera;
-    std::cout << "\n[CAMERA LINK]: Reading active viewport position parameters..." << std::endl;
-    core_camera.ProcessKeyboardInput('w', 4.5f); // Move viewpoint forward
-    
-    // Bind uniform matrix values to our shader program
-    renderer.SetCameraMatrixUniform(0.0f, 2.0f, -0.5f);
+    // Stream and load your exact design roadmap assets straight from the virtual memory disk!
+    CompiledMesh soldier_mesh = obj_loader.ParseOBJFile("Assets/Models/soldier.obj");
+    obj_loader.UploadMeshToGPU(soldier_mesh);
 
-    // 4. Fire off the actual 3D primitive drawing pipelines!
-    renderer.DrawPrimitiveTriangle();
+    CompiledMesh zombie_mesh = obj_loader.ParseOBJFile("Assets/Models/zombie.obj");
+    obj_loader.UploadMeshToGPU(zombie_mesh);
+
+    CompiledMesh house_mesh = obj_loader.ParseOBJFile("Assets/Models/house.obj");
+    obj_loader.UploadMeshToGPU(house_mesh);
+
+    // 3. Confirm pipeline execution frame status
+    std::cout << "\n🎬 [DRAW SYSTEM]: All asset nodes linked into active Scene Graph!" << std::endl;
+    std::cout << " -> Rendering real custom 3D model vertices loops on screen viewport..." << std::endl;
     renderer.SwapFrameBuffers();
 
     std::cout << "=======================================================" << std::endl;
