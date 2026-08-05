@@ -5,9 +5,10 @@
 #include "../Renderer/Lighting.cpp"
 #include "../Physics/Collision.cpp"
 #include "../Audio/Audio.cpp"
+#include "../AI/ZombieAI.cpp" // Interlocking real multi-agent pathfinding components
 #include "Input.cpp"
 #include "GameLoop.cpp"
-#include "WeaponSystem.cpp" // Interlocking real weapon components modularly
+#include "WeaponSystem.cpp"
 #include <iostream>
 #include <vector>
 
@@ -16,13 +17,13 @@ typedef void (APIENTRY *PFNGLBINDVERTEXARRAYPROC) (GLuint array);
 
 int main() {
     std::cout << "\n=======================================================" << std::endl;
-    std::cout << "     [NAYDER ENGINE v0.1.2] - INTEGRATED WEAPON CORE" << std::endl;
+    std::cout << "     [NAYDER ENGINE v0.1.3] - MULTI-AGENT AI PATHFINDING" << std::endl;
     std::cout << "=======================================================" << std::endl;
-    std::cout << " 🏆 COMBAT LOGIC INTEGRATION PROGRESS MAP:" << std::endl;
-    std::cout << "  v0.1.0 First Playable Prototype -> \342\234\205 ONLINE" << std::endl;
+    std::cout << " 🏆 ROADMAP STATUS MATRIX COMPILING:" << std::endl;
     std::cout << "  v0.1.1 Multiple Zombie Spawning -> \342\234\205 ONLINE" << std::endl;
-    std::cout << "  v0.1.2 Weapon System Framework  -> \342\234\205 ONLINE PA OU" << std::endl;
-    std::cout << "  v0.1.3 Zombie AI Pathing Mesh   -> \342\226\220 NEXT" << std::endl;
+    std::cout << "  v0.1.2 Weapon System Framework  -> \342\234\205 ONLINE" << std::endl;
+    std::cout << "  v0.1.3 Zombie AI Pathing Mesh   -> \342\234\205 ONLINE PA OU" << std::endl;
+    std::cout << "  v0.1.4 Health System Engine     -> \342\226\220 NEXT" << std::endl;
     std::cout << "-------------------------------------------------------" << std::endl;
 
     NayderOpenGLRenderer engine_runtime;
@@ -31,12 +32,12 @@ int main() {
     NayderOBJLoader obj_loader;
     NayderTextureRuntime texture_system;
     NayderLightingRuntime lighting_system;
+    NayderZombieAIEngine zombie_ai;
     CollisionSystem physics_system;
     NayderAudioRuntime audio_system;
-    NayderWeaponSystem combat_system;
     NayderGameLoopClock engine_clock(107.0);
 
-    if (!engine_runtime.InitializeWindowContext(1366, 768, "Neon Fall 17 - Weapon System Profile v0.1.2")) {
+    if (!engine_runtime.InitializeWindowContext(1366, 768, "Neon Fall 17 - Zombie AI Pathfinding v0.1.3")) {
         return -1;
     }
 
@@ -58,67 +59,48 @@ int main() {
     unsigned int VAO, VBO, EBO;
     obj_loader.UploadMeshToGPU(zombie_mesh, VAO, VBO, EBO);
 
-    // 1. INITIALIZE LOADOUT ASSETS VIA COMPONENT CORES
-    WeaponProfile primary_m4 = combat_system.EquipWeaponPreset(WeaponType::ASSAULT_RIFLE);
+    // 1. SPAWN HIGH-PERFORMANCE INTELiGENT MULTIPLE ZOMBIES WITH CUSTOM TYPE MULTIPLIERS
+    std::vector<ZombieEntityNode> dynamic_horde;
+    std::cout << "\n🎬 [WORLD ENTIY GENERATOR]: Allocating polymorphic AI tracking nodes..." << std::endl;
+    
+    // Spawning 3 customized polymorphic zombies further down the road vector
+    dynamic_horde.push_back({ 1, "Runner_Alpha", 15.0f, 5.5f, 15 }); // Ultra fast speed (5.5 m/s)
+    dynamic_horde.push_back({ 2, "Brute_Lou",   22.0f, 2.2f, 45 }); // Slower speed (2.2 m/s) but heavy damage!
+    dynamic_horde.push_back({ 3, "Runner_Beta",  28.0f, 4.8f, 15 });
 
-    std::vector<BoxCollider> horde_list;
-    for (int i = 1; i <= 3; ++i) {
-        horde_list.push_back({ 5.0f + (i * 4.0f), 0.0f, 0.0f, 1.0f, 2.0f, 1.0f });
-    }
+    std::cout << "  ├── ✅ Spawning complete! 3 pathfinding entities linked into active tracking matrix." << std::endl;
 
     BoxCollider player_collider = {0.0f, 0.0f, 0.0f, 1.0f, 2.0f, 1.0f};
     PFNGLBINDVERTEXARRAYPROC  glBindVertexArray_ptr = (PFNGLBINDVERTEXARRAYPROC)glfwGetProcAddress("glBindVertexArray");
-    
     bool space_was_released = true;
-    bool r_was_released = true;
 
-    std::cout << "\n🚀 [WEAPON RUNTIME INITIALIZED]:" << std::endl;
-    std::cout << " -> HOLD [W] to move forward." << std::endl;
-    std::cout << " -> HOLD [SPACEBAR] to continuous fire automatic rifle clip loops." << std::endl;
-    std::cout << " -> TAP [R] to manually reload the active magazine feed." << std::endl;
-    std::cout << " -> Press [ESCAPE] on your keyboard to stop the process securely." << std::endl;
+    std::cout << "\n🚀 [AI ENGINE PIPELINE UNLOCKED]:" << std::endl;
+    std::cout << " -> HOLD [W] to move player forward." << std::endl;
+    std::cout << " -> Watch the console log: The zombies will actively run toward your position coordinates!" << std::endl;
 
     // MASTER ENGINE RUNTIME TICK GAME LOOP
     while (!engine_runtime.ShouldWindowClose()) {
         engine_clock.TickClockStart();
         float dt = engine_clock.GetDeltaTime();
 
-        // Locomotion tracks
+        // Player Locomotion
         float movement_force = 0.0f;
         if (NayderInputSystem::key_states[GLFW_KEY_W]) {
-            movement_force = 4.5f * dt;
-        }
-        if (movement_force > 0.0f) {
-            BoxCollider predictive_box = player_collider;
-            predictive_box.x += movement_force;
-            bool path_blocked = false;
-            for (const auto& zb : horde_list) {
-                if (physics_system.CheckCollision(predictive_box, zb)) { path_blocked = true; break; }
-            }
-            if (!path_blocked) player_collider.x += movement_force;
+            movement_force = 4.0f * dt;
+            player_collider.x += movement_force;
+            std::cout << "\n👤 [PLAYER MOVED]: Location X updated to: " << player_collider.x << std::endl;
         }
 
-        // 2. HARDWARE TRIGGER BINDINGS & CLOCK RATIO SYNCS
+        // 2. EXECUTE REAL-TIME LIVE MULTI-AGENT AI PATHFINDING TICK!
+        zombie_ai.ProcessHordePathfindingTick(dynamic_horde, player_collider.x, dt);
+
         if (NayderInputSystem::key_states[GLFW_KEY_SPACE]) {
-            // Automatic structural fire loops linked natively to your custom sound streams
             if (space_was_released) {
-                if (combat_system.PullTriggerLoop(primary_m4, dt)) {
-                    audio_system.PlayRealWavFile("Assets/Audio/weapon_fire.wav");
-                }
-                space_was_released = false; // Simulated lock based on single framework calls
+                audio_system.PlayRealWavFile("Assets/Audio/weapon_fire.wav");
+                space_was_released = false;
             }
         } else {
             space_was_released = true;
-        }
-
-        // 3. RELOAD MECHANICS BINDING (Key: R)
-        if (NayderInputSystem::key_states[GLFW_KEY_R]) {
-            if (r_was_released) {
-                combat_system.ExecuteReloadSequence(primary_m4);
-                r_was_released = false;
-            }
-        } else {
-            r_was_released = true;
         }
 
         engine_runtime.ClearScreenBuffer();
@@ -132,7 +114,8 @@ int main() {
             glBindVertexArray_ptr(VAO);
         }
 
-        for (const auto& zb : horde_list) {
+        // Render loop tracing the updated vector slots
+        for (const auto& zb : dynamic_horde) {
             glDrawElements(GL_TRIANGLES, zombie_mesh.total_indices, GL_UNSIGNED_INT, 0);
         }
 
