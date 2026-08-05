@@ -1,21 +1,22 @@
 #pragma once
 #include <string>
 
-struct GameSaveState {
-    int saved_day;
+struct GameSaveStateNode {
+    int survival_day;
     int player_hp;
     int player_armor;
-    int total_ammo;
-    int zombies_killed;
-    std::string current_map;
+    int current_ammo;
+    int reserve_ammo;
+    int total_zombies_killed;
+    std::string active_world_map;
 };
 
-class NayderSaveLoadEngine {
+class NayderSaveLoadSystem {
 private:
-    std::string save_file_path = "savegame.dat";
+    std::string storage_disk_file = "savegame.dat";
 
 public:
-    NayderSaveLoadEngine();
-    bool WriteSaveGameToDisk(const GameSaveState& state);
-    bool ReadSaveGameFromDisk(GameSaveState& out_state);
+    NayderSaveLoadSystem();
+    bool SerializeSessionToDisk(const GameSaveStateNode& session_data);
+    bool DeserializeSessionFromDisk(GameSaveStateNode& outbound_data);
 };
