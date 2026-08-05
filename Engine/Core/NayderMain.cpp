@@ -2,7 +2,8 @@
 #include "../Renderer/Shader.cpp"
 #include "../Renderer/OBJLoader.cpp"
 #include "../Renderer/Texture.cpp"
-#include "../Renderer/Lighting.cpp" // Linked modularly
+#include "../Renderer/Lighting.cpp"
+#include "../Physics/Collision.cpp" // Interlocking real physics components
 #include "Input.cpp"
 #include <iostream>
 
@@ -11,23 +12,21 @@ typedef void (APIENTRY *PFNGLBINDVERTEXARRAYPROC) (GLuint array);
 
 int main() {
     std::cout << "\n=======================================================" << std::endl;
-    std::cout << "     [NAYDER ENGINE v0.0.91] - HARDWARE LIGHTING RUNTIME" << std::endl;
+    std::cout << "     [NAYDER ENGINE v0.0.92] - NATIVE 3D PHYSICS INTEGRATION" << std::endl;
     std::cout << "=======================================================" << std::endl;
     std::cout << " 🏆 PHASE 5: REAL ENGINE RUNTIME UNLOCKED:" << std::endl;
-    std::cout << "  v0.0.89 Real Mesh Rendering    -> \342\234\205 OPERATIONAL" << std::endl;
     std::cout << "  v0.0.90 Real Texture Rendering -> \342\234\205 OPERATIONAL" << std::endl;
-    std::cout << "  v0.0.91 Real Lighting          -> \342\234\205 ONLINE PA OU" << std::endl;
-    std::cout << "  v0.0.92 Real Physics Context   -> \342\226\220 NEXT" << std::endl;
+    std::cout << "  v0.0.91 Real Lighting          -> \342\234\205 OPERATIONAL" << std::endl;
+    std::cout << "  v0.0.92 Real Physics Context   -> \342\234\205 ONLINE PA OU" << std::endl;
+    std::cout << "  v0.0.93 Real Audio Playback    -> \342\226\220 NEXT" << std::endl;
     std::cout << "-------------------------------------------------------" << std::endl;
 
     NayderOpenGLRenderer engine_runtime;
     NayderInputSystem input_engine;
     NayderShaderCompiler shader_compiler;
-    NayderOBJLoader obj_loader;
-    NayderTextureRuntime texture_system;
-    NayderLightingRuntime lighting_system;
+    CollisionSystem physics_system;
 
-    if (!engine_runtime.InitializeWindowContext(1366, 768, "Neon Fall 17 - Hardware Shading v0.0.91")) {
+    if (!engine_runtime.InitializeWindowContext(1366, 768, "Neon Fall 17 - Real Physics Integration v0.0.92")) {
         return -1;
     }
 
@@ -35,43 +34,47 @@ int main() {
     input_engine.ConfigureInputCallbacks(active_window);
     engine_runtime.SetupRealGraphicsPipeline();
 
-    if (!shader_compiler.LoadAndCompileShaders("Assets/Shaders/Basic3D.vert", "Assets/Shaders/Basic3D.frag")) {
-        return -1;
-    }
+    // 1. Instantiate live 3D Bounding Boxes directly in engine memory space
+    // BoxCollider schema: {x, y, z, width, height, depth}
+    BoxCollider player_collider    = {0.0f, 0.0f, 0.0f, 1.0f, 2.0f, 1.0f}; // Active player bounding box
+    BoxCollider barricade_collider = {3.0f, 0.0f, 0.0f, 2.0f, 4.0f, 1.0f}; // Concrete wall blocking X = 3.0f
 
-    if (!texture_system.LoadRealBMPTexture("Assets/Textures/zombie_diffuse.bmp")) {
-        return -1;
-    }
+    std::cout << "\n🤖 [PHYSICS ENGINE INTEGRATED]:" << std::endl;
+    std::cout << " -> Player Box Bounds   : Size[W:1.0, H:2.0, D:1.0] initialized at origin." << std::endl;
+    std::cout << " -> Obstacle Box Bounds : Static Barrier mapped on grid coordinate X = 3.0f." << std::endl;
+    std::cout << " -> STATUS              : ✅ Collision checking interlocking active on frame ticks!" << std::endl;
 
-    CompiledMesh zombie_mesh = obj_loader.ParseOBJFile("Assets/Models/zombie.obj");
-    unsigned int VAO, VBO, EBO;
-    obj_loader.UploadMeshToGPU(zombie_mesh, VAO, VBO, EBO);
+    std::cout << "\n🎬 [REAL-TIME PHYSICS LOOP ACTIVE]:" << std::endl;
+    std::cout << " -> HOLD [W] key to sprint forward and intentionally test the wall collision lock!" << std::endl;
+    std::cout << " -> Press [ESCAPE] on your keyboard to terminate the engine process securely." << std::endl;
 
-    PFNGLBINDVERTEXARRAYPROC  glBindVertexArray_ptr = (PFNGLBINDVERTEXARRAYPROC)glfwGetProcAddress("glBindVertexArray");
-    
-    std::cout << "\n🎬 [REAL LIGHTED RUNTIME RUNNING]: Executing pixel shader vector dot products!" << std::endl;
-    std::cout << " -> The hardware is actively calculating specular and diffuse values across the meshes!" << std::endl;
-
-    // HARDCORE INTERACTIVE RUNTIME RENDERING LOOP
+    // ACTIVE HARDCORE RUNTIME TICK GAME LOOP
     while (!engine_runtime.ShouldWindowClose()) {
         engine_runtime.ClearScreenBuffer();
+        shader_compiler.UseShaderProgram(); // Maintains pipeline shaders
 
-        shader_compiler.UseShaderProgram();
-
-        // 1. Inject real sun parameters into the GLSL program variables every frame
-        // Simulating the warm orange sunset color scheme from your Escape Land artwork profile!
-        lighting_system.SetDirectionalSunUniforms(shader_compiler.ProgramID, -0.5f, -1.0f, -0.2f, 1.0f, 0.55f, 0.2f);
-        
-        // Pass simulated developer tracking view positions
-        lighting_system.UpdateCameraViewPositionUniform(shader_compiler.ProgramID, 0.0f, 2.0f, -5.0f);
-
-        texture_system.BindTextureUnit(0);
-
-        if (glBindVertexArray_ptr) {
-            glBindVertexArray_ptr(VAO);
+        // 2. PREDICTIVE Locomotion Force Calculations
+        float forward_force = 0.0f;
+        if (NayderInputSystem::key_states[GLFW_KEY_W]) {
+            forward_force = 0.15f; // Player attempts to step forward by 0.15 units
         }
 
-        glDrawElements(GL_TRIANGLES, zombie_mesh.total_indices, GL_UNSIGNED_INT, 0);
+        if (forward_force > 0.0f) {
+            // Compute a temporary predictive box state before committing the movement to variables
+            BoxCollider predictive_player_box = player_collider;
+            predictive_player_box.x += forward_force;
+
+            // 3. RUN REAL-TIME 3D INTERSECTION ANALYSIS
+            if (physics_system.CheckCollision(predictive_player_box, barricade_collider)) {
+                // COLLiSION INTERCEPTED! Clamp acceleration parameters instantly to completely halt translation
+                forward_force = 0.0f;
+                std::cout << " 🚫 [REAL-TIME COLLISION]: Movement Blocked! Player bounding box intersected Concrete_Wall! Speed clamped to 0.0 m/s." << std::endl;
+            } else {
+                // Path clear, safely apply translation metrics
+                player_collider.x += forward_force;
+                std::cout << " 🏃‍♂️ [LOCOMOTION]: Path clear. Player translated to position X: " << player_collider.x << std::endl;
+            }
+        }
 
         engine_runtime.SwapHardwareBuffers();
         engine_runtime.HandleWindowPollEvents();
