@@ -10,6 +10,7 @@
 #include "Input.cpp"
 #include "GameLoop.cpp"
 #include "WeaponSystem.cpp"
+#include "Inventory.cpp" // Interlocking inventory component layers modularly
 #include "HealthSystem.cpp"
 #include <iostream>
 #include <vector>
@@ -19,13 +20,13 @@ typedef void (APIENTRY *PFNGLBINDVERTEXARRAYPROC) (GLuint array);
 
 int main() {
     std::cout << "\n=======================================================" << std::endl;
-    std::cout << "     [NAYDER ENGINE v0.1.6] - CENTRAL CROSSHAIR SYSTEM" << std::endl;
+    std::cout << "     [NAYDER ENGINE v0.1.7] - INVENTORY SYSTEM RUNTIME" << std::endl;
     std::cout << "=======================================================" << std::endl;
-    std::cout << " 🏆 COMBAT INTERFACE RECONSTRUCTION PROGRESS MAP:" << std::endl;
-    std::cout << "  v0.1.4 Health System Engine     -> \342\234\205 ONLINE" << std::endl;
+    std::cout << " 🏆 SURVIVAL INFRASTRUCTURE MATRIX UNLOCKED:" << std::endl;
     std::cout << "  v0.1.5 HUD System Interface     -> \342\234\205 ONLINE" << std::endl;
-    std::cout << "  v0.1.6 Central Crosshair Node   -> \342\234\205 ONLINE PA OU" << std::endl;
-    std::cout << "  v0.1.7 Inventory System Core    -> \342\226\220 NEXT" << std::endl;
+    std::cout << "  v0.1.6 Central Crosshair Node   -> \342\234\205 ONLINE" << std::endl;
+    std::cout << "  v0.1.7 Inventory System Core    -> \342\234\205 ONLINE PA OU" << std::endl;
+    std::cout << "  v0.1.8 Save / Load State Sync   -> \342\226\220 NEXT" << std::endl;
     std::cout << "-------------------------------------------------------" << std::endl;
 
     NayderOpenGLRenderer engine_runtime;
@@ -36,13 +37,14 @@ int main() {
     NayderLightingRuntime lighting_system;
     NayderZombieAIEngine zombie_ai;
     NayderWeaponSystem combat_system;
+    NayderInventoryEngine pack_system;
     NayderHealthSystem vital_system;
     NayderHUDRenderer hud_engine;
     CollisionSystem physics_system;
     NayderAudioRuntime audio_system;
     NayderGameLoopClock engine_clock(107.0);
 
-    if (!engine_runtime.InitializeWindowContext(1366, 768, "Neon Fall 17 - Central Crosshair v0.1.6")) {
+    if (!engine_runtime.InitializeWindowContext(1366, 768, "Neon Fall 17 - Inventory Control v0.1.7")) {
         return -1;
     }
 
@@ -64,8 +66,9 @@ int main() {
     unsigned int VAO, VBO, EBO;
     obj_loader.UploadMeshToGPU(zombie_mesh, VAO, VBO, EBO);
 
+    // 1. Initialize Default Multi-Slot Inventory Profiles
+    pack_system.InitializeDefaultSlots(combat_system);
     EntityHealthPool player_vitals = { "NAYDER_01", 100, 100, 75, 75, false };
-    WeaponProfile primary_m4 = combat_system.EquipWeaponPreset(WeaponType::ASSAULT_RIFLE);
 
     std::vector<ZombieEntityNode> dynamic_horde;
     int zombie_hps[] = { 100, 100, 100 };
@@ -78,52 +81,66 @@ int main() {
     PFNGLBINDVERTEXARRAYPROC  glBindVertexArray_ptr = (PFNGLBINDVERTEXARRAYPROC)glfwGetProcAddress("glBindVertexArray");
     
     bool space_was_released = true;
+    bool r_was_released = true;
+    bool swap_1_released = true;
+    bool swap_2_released = true;
     int total_kills = 0;
 
-    std::cout << "\n🚀 [CROSSHAIR LOCK INITIALIZED]:" << std::endl;
-    std::cout << " -> Launching unified runtime. Targeting node centered on display boundaries." << std::endl;
+    std::cout << "\n🚀 [TACTICAL RUNTIME LIVE]:" << std::endl;
+    std::cout << " -> Tap [1] or [2] on keyboard to swap between Primary Auto Rifle and Secondary Pistol!" << std::endl;
 
     // MASTER ENGINE RUNTIME TICK GAME LOOP
     while (!engine_runtime.ShouldWindowClose() && !player_vitals.is_dead) {
         engine_clock.TickClockStart();
         float dt = engine_clock.GetDeltaTime();
 
+        // 2. MONITOR RUNTIME OS INPUT FOR HOT-SWAPPING EVENTS
+        if (NayderInputSystem::key_states[GLFW_KEY_1]) {
+            if (swap_1_released) { pack_system.CycleActiveSlotSelection(0); swap_1_released = false; }
+        } else { swap_1_released = true; }
+
+        if (NayderInputSystem::key_states[GLFW_KEY_2]) {
+            if (swap_2_released) { pack_system.CycleActiveSlotSelection(1); swap_2_released = false; }
+        } else { swap_2_released = true; }
+
+        // Fetch active equipped item properties
+        WeaponProfile& active_gun = pack_system.GetActiveWeaponProfile();
+
         // Locomotion
         float movement_force = 0.0f;
-        if (NayderInputSystem::key_states[GLFW_KEY_W]) {
-            movement_force = 4.0f * dt;
-            player_collider.x += movement_force;
-        }
+        if (NayderInputSystem::key_states[GLFW_KEY_W]) { movement_force = 4.0f * dt; player_collider.x += movement_force; }
 
         zombie_ai.ProcessHordePathfindingTick(dynamic_horde, player_collider.x, dt);
 
+        // Core proxy hitting
         for (size_t i = 0; i < dynamic_horde.size(); ++i) {
             if (zombie_deads[i]) continue;
             float distance = std::abs(dynamic_horde[i].pos_x - player_collider.x);
-            if (distance <= 1.8f) {
-                vital_system.ApplyDamageToPlayer(player_vitals, dynamic_horde[i].attack_damage);
-            }
+            if (distance <= 1.8f) vital_system.ApplyDamageToPlayer(player_vitals, dynamic_horde[i].attack_damage);
         }
 
+        // Pull Weapon Trigger
         if (NayderInputSystem::key_states[GLFW_KEY_SPACE]) {
             if (space_was_released) {
-                if (combat_system.PullTriggerLoop(primary_m4, dt)) {
+                if (combat_system.PullTriggerLoop(active_gun, dt)) {
                     audio_system.PlayRealWavFile("Assets/Audio/weapon_fire.wav");
                     for (size_t i = 0; i < dynamic_horde.size(); ++i) {
                         if (!zombie_deads[i]) {
-                            if (vital_system.ApplyDamageToZombie(i + 1, zombie_hps[i], zombie_deads[i], primary_m4.base_damage)) {
-                                total_kills++;
-                            }
+                            if (vital_system.ApplyDamageToZombie(i + 1, zombie_hps[i], zombie_deads[i], active_gun.base_damage)) { total_kills++; }
                             break;
                         }
                     }
                 }
                 space_was_released = false;
             }
-        } else {
-            space_was_released = true;
-        }
+        } else { space_was_released = true; }
 
+        // Manual Reload Override
+        if (NayderInputSystem::key_states[GLFW_KEY_R]) {
+            if (r_was_released) { combat_system.ExecuteReloadSequence(active_gun); r_was_released = false; }
+        } else { r_was_released = true; }
+
+        // Rendering Pipeline draws
         engine_runtime.ClearScreenBuffer();
         shader_compiler.UseShaderProgram();
 
@@ -131,14 +148,12 @@ int main() {
         lighting_system.UpdateCameraViewPositionUniform(shader_compiler.ProgramID, player_collider.x, 2.0f, -5.0f);
         texture_system.BindTextureUnit(0);
 
-        if (glBindVertexArray_ptr) { 
-            glBindVertexArray_ptr(VAO); 
-        }
-        
+        if (glBindVertexArray_ptr) { glBindVertexArray_ptr(VAO); }
         for (size_t i = 0; i < dynamic_horde.size(); ++i) {
             if (!zombie_deads[i]) { glDrawElements(GL_TRIANGLES, zombie_mesh.total_indices, GL_UNSIGNED_INT, 0); }
         }
 
+        // Render pass 2: 2D HUD Overlays linked dynamically to active slot data
         hud_engine.SetOrthographicProjection();
         
         HUDLiveStats overlay_packet;
@@ -146,12 +161,15 @@ int main() {
         overlay_packet.max_hp = player_vitals.max_hp;
         overlay_packet.current_armor = player_vitals.current_armor;
         overlay_packet.max_armor = player_vitals.max_armor;
-        overlay_packet.clip_ammo = primary_m4.current_clip;
-        overlay_packet.max_clip = primary_m4.clip_capacity;
-        overlay_packet.reserve_ammo = primary_m4.reserve_ammo;
+        
+        // Dynamic hook binding to slot calculations!
+        overlay_packet.clip_ammo = active_gun.current_clip;
+        overlay_packet.max_clip = active_gun.clip_capacity;
+        overlay_packet.reserve_ammo = active_gun.reserve_ammo;
+        
         overlay_packet.total_kills = total_kills;
         overlay_packet.current_fps = engine_clock.GetCurrentFPS();
-        overlay_packet.objective = "Reach Extraction Point";
+        overlay_packet.objective = "Slot [" + std::to_string(pack_system.GetActiveSlotIndex() + 1) + "]: " + active_gun.name;
 
         hud_engine.RenderHUDDashboard(overlay_packet);
         hud_engine.RestorePerspectiveProjection();
