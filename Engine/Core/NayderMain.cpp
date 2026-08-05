@@ -1,42 +1,60 @@
 #include "../Renderer/Renderer.cpp"
+#include "Input.cpp"
 #include <iostream>
 
 int main() {
     std::cout << "\n=======================================================" << std::endl;
-    std::cout << "     [NAYDER ENGINE v0.0.85] - REAL WINDOW RUNTIME" << std::endl;
+    std::cout << "     [NAYDER ENGINE v0.0.86] - REAL INPUT RUNTIME" << std::endl;
     std::cout << "=======================================================" << std::endl;
     std::cout << " 🏆 PHASE 5: REAL ENGINE RUNTIME UNLOCKED:" << std::endl;
     std::cout << "  v0.0.85 Real Window Runtime     -> \342\234\205 OPERATIONAL" << std::endl;
-    std::cout << "  v0.0.86 Real Input (Key+Mouse)  -> \342\226\220 NEXT" << std::endl;
+    std::cout << "  v0.0.86 Real Input (Key+Mouse)  -> \342\234\205 OPERATIONAL PA OU" << std::endl;
+    std::cout << "  v0.0.87 Real OpenGL Render Loop -> \342\226\220 NEXT" << std::endl;
     std::cout << "-------------------------------------------------------" << std::endl;
 
     NayderOpenGLRenderer engine_runtime;
+    NayderInputSystem input_engine;
 
-    // LOUVRI VRÈ FÈNÈT JWÈT LA SOU EKRAAN AN (1366x768 Computer Resolution)
-    if (!engine_runtime.InitializeWindowContext(1366, 768, "Neon Fall 17 - Real Runtime Build v0.0.85")) {
+    // Initialize 1366x768 widescreen display window profile
+    if (!engine_runtime.InitializeWindowContext(1366, 768, "Neon Fall 17 - Real Input System v0.0.86")) {
         return -1;
     }
 
-    std::cout << "\n🎬 [ENGINE CORE LOOP]: Launching real window cycle. Close the graphic window to stop." << std::endl;
+    // Recover the GLFW window handle from inside our renderer module to attach input hooks
+    GLFWwindow* active_window = glfwGetCurrentContext();
+    input_engine.ConfigureInputCallbacks(active_window);
 
-    // VRÈ BOUK JWÈT LA (Real Game Loop Framework)
+    std::cout << "\n🎬 [REAL RUNTIME GAME LOOP]: Input listeners running at 60Hz tick rates." << std::endl;
+    std::cout << " -> Move your mouse to test real-time 360 rotation loops in terminal output!" << std::endl;
+    std::cout << " -> Press [W, A, S, D] keys to track live status updates." << std::endl;
+    std::cout << " -> Press [ESCAPE] on your keyboard to securely kill the game loop process." << std::endl;
+
+    float current_yaw = 0.0f, current_pitch = 0.0f;
+
+    // CORE HARDCORE INTERACTIVE RUNTIME LOOP
     while (!engine_runtime.ShouldWindowClose()) {
-        
-        // 1. Netwaye ekran an chak frame
         engine_runtime.ClearScreenBuffer();
 
-        // (Isit la se kote nou pral ploge kòd desine triyang ak objè 3D yo nan v0.0.87)
+        // 1. Process Live Keyboard Key Arrays
+        if (NayderInputSystem::key_states[GLFW_KEY_W]) {
+            std::cout << " 🎮 [KEY EVENT]: Holding W -> Translating player character velocity FORWARD." << std::endl;
+        }
+        if (NayderInputSystem::key_states[GLFW_KEY_S]) {
+            std::cout << " 🎮 [KEY EVENT]: Holding S -> Translating player character velocity BACKWARD." << std::endl;
+        }
 
-        // 2. Chanje buffer kat grafik la pou afiche desen an
+        // 2. Process Live Mouse Orientation Coordinates
+        float old_yaw = current_yaw;
+        NayderInputSystem::GetCameraOrientation(current_yaw, current_pitch);
+        if (current_yaw != old_yaw) {
+            std::cout << " 🖱️  [MOUSE EVENT]: 360 Rotation Updated -> Yaw: " << current_yaw << "° │ Pitch: " << current_pitch << "°" << std::endl;
+        }
+
         engine_runtime.SwapHardwareBuffers();
-
-        // 3. Tcheke si jwè a peze klavye oswa sourit
-        engine_runtime.HandleWindowPollEvents();
+        engine_runtime.HandleWindowPollEvents(); // Keeps checking hardware states
     }
 
-    // Fèmen pyebwa kòmand lan lè fenèt la fèmen
     engine_runtime.TerminateGraphicsContext();
-
     std::cout << "=======================================================" << std::endl;
     return 0;
 }
