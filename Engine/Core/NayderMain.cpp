@@ -6,41 +6,49 @@
 #include "../Renderer/Shadows.cpp"
 #include "../Renderer/Terrain.cpp"
 #include "../Renderer/ParticleSystem.cpp"
+#include "../Renderer/HUDRenderer.cpp"
 #include "../Animation/Animation.cpp"
 #include "../Audio/Audio.cpp"
+#include "SaveLoadCore.cpp"
 #include "Camera.cpp"
 #include <iostream>
 
 int main() {
     std::cout << "\n=======================================================" << std::endl;
-    std::cout << "     [NAYDER ENGINE v0.0.76] - INTEGRATED VFX MATRIX" << std::endl;
+    std::cout << "     [NAYDER ENGINE v0.0.78] - GAME PERSISTENCE CORE" << std::endl;
     std::cout << "=======================================================" << std::endl;
-    std::cout << " 🏆 NEW SYSTEM INTEGRATION ROADMAP UNLOCKED:" << std::endl;
-    std::cout << "  v0.0.75 Spatial Audio    -> \342\234\205 ONLINE" << std::endl;
-    std::cout << "  v0.0.76 Particle System  -> \342\234\205 ONLINE PA OU" << std::endl;
-    std::cout << "  v0.0.77 UI/HUD Renderer  -> \342\226\220 NEXT" << std::endl;
+    std::cout << " 🏆 INTEGRATION PIPELINE PROGRESS MATRIX:" << std::endl;
+    std::cout << "  v0.0.76 Particle System  -> \342\234\205 ONLINE" << std::endl;
+    std::cout << "  v0.0.77 UI / HUD Engine  -> \342\234\205 ONLINE" << std::endl;
+    std::cout << "  v0.0.78 Save & Load Core -> \342\234\205 ONLINE PA OU" << std::endl;
+    std::cout << "  v0.0.79 Asset Manager    -> \342\226\220 NEXT" << std::endl;
     std::cout << "-------------------------------------------------------" << std::endl;
 
     NayderOpenGLRenderer renderer;
-    NayderParticleSystem vfx_engine;
+    NayderSaveLoadEngine persistence_engine;
 
-    // Simulate Inter-module connection: Bullet hits Zombie (Combining modules v0.0.65 + v0.0.68 + v0.0.76)
-    std::cout << "🎬 [COMBAT LOGIC TRIGGER]: Bullet Raycast collision intersection detected on Zombie Mesh node!" << std::endl;
-    
-    // 1. Spawn a precise directional blood splatter at the hitbox intersection coordinate
-    vfx_engine.SpawnVFXEmitter(VFXType::BLOOD_IMPACT, 14.5f, 1.8f, 2.0f, 150);
+    // 1. Simulate active gameplay scenario: Player reaches Day 23 in Hardcore Mode
+    GameSaveState active_session;
+    active_session.saved_day = 23;
+    active_session.player_hp = 85;
+    active_session.player_armor = 40;
+    active_session.total_ammo = 150;
+    active_session.zombies_killed = 1248;
+    active_session.current_map = "Desert_Ghost_City_Alpha";
 
-    // 2. Spawn concrete wall sparks from weapon crossfire stray shots
-    vfx_engine.SpawnVFXEmitter(VFXType::BULLET_IMPACT, -5.0f, 0.5f, 12.0f, 45);
+    // Trigger Save Process
+    persistence_engine.WriteSaveGameToDisk(active_session);
 
-    // 3. Simulate Day 100 Endgame Endgame aftermath - Deploying heavy volumetric nuclear fallout dust filters
-    vfx_engine.SpawnVFXEmitter(VFXType::NUKE_DUST, 0.0f, 0.0f, 0.0f, 2000);
+    std::cout << "\n-------------------------------------------------------" << std::endl;
 
-    // 4. Fire the updates and display sweeps over our GPU pipeline buffers
-    vfx_engine.UpdateParticleLifeCycles(0.016f); // 16ms frame delta updates
-    vfx_engine.RenderParticleBuffers();
+    // 2. Simulate subsequent game launch: Restoring data from local storage
+    GameSaveState loaded_session;
+    if (persistence_engine.ReadSaveGameFromDisk(loaded_session)) {
+        std::cout << " 🎮 [GAMEPLAY RESTART]: Synchronization successful across memory slots!" << std::endl;
+        std::cout << " -> Running Zombie Zone Loop at Day " << loaded_session.saved_day << " with " << loaded_session.total_ammo << " rounds loaded." << std::endl;
+    }
 
-    std::cout << "\n🎬 [SYSTEM DISPLAY MAP]: Flushing shader uniform matrices..." << std::endl;
+    std::cout << "\n🎬 [ENGINE CORE]: Swapping frame buffers..." << std::endl;
     renderer.SwapFrameBuffers();
 
     std::cout << "=======================================================" << std::endl;
