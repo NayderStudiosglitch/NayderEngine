@@ -4,41 +4,39 @@
 #include "../Renderer/Material.cpp"
 #include "../Renderer/Lighting.cpp"
 #include "../Renderer/Shadows.cpp"
+#include "../Renderer/Terrain.cpp"
 #include "Camera.cpp"
 #include <iostream>
 
 int main() {
     std::cout << "\n=======================================================" << std::endl;
-    std::cout << "     [NAYDER ENGINE v0.0.72] - REAL-TIME SHADOW MAPPING" << std::endl;
+    std::cout << "     [NAYDER ENGINE v0.0.73] - HIGH-POLY 3D TERRAIN CORE" << std::endl;
     std::cout << "=======================================================" << std::endl;
-    std::cout << " 🏆 ADVANCED GRAPHICS STACK COMPLETE:" << std::endl;
-    std::cout << "  v0.0.70 Material System  -> \342\234\205 ONLINE" << std::endl;
+    std::cout << " 🏆 3D WORLD INTEGRATION ROADMAP UPDATE:" << std::endl;
     std::cout << "  v0.0.71 Lighting Engine  -> \342\234\205 ONLINE" << std::endl;
-    std::cout << "  v0.0.72 Shadow Mapping   -> \342\234\205 ONLINE PA OU" << std::endl;
-    std::cout << "  v0.0.73 Terrain Renderer -> \342\226\220 NEXT" << std::endl;
+    std::cout << "  v0.0.72 Shadow Mapping   -> \342\234\205 ONLINE" << std::endl;
+    std::cout << "  v0.0.73 Terrain Renderer -> \342\234\205 ONLINE PA OU" << std::endl;
+    std::cout << "  v0.0.74 Animation System -> \342\226\220 NEXT" << std::endl;
     std::cout << "-------------------------------------------------------" << std::endl;
 
     NayderOpenGLRenderer renderer;
     NayderOBJLoader obj_loader;
     NayderTextureSystem texture_engine;
-    NayderMaterialSystem material_engine;
-    NayderLightingEngine lighting_engine;
-    NayderShadowEngine shadow_engine;
+    NayderTerrainRenderer terrain_engine;
 
-    // Load assets and light sources
-    CompiledMesh house = obj_loader.ParseOBJFile("Assets/Models/house.obj");
-    DirectionalLight sun = lighting_engine.CreateSunlight(-0.5f, -1.0f, -0.2f, "SUNSET_CYBERPUNK");
-    
-    // 1. Initialize the specialized Next-Gen Shadow Buffers
-    ShadowFrameBuffer shadow_buffer = shadow_engine.InitializeShadowBuffer();
+    // 1. Chaje modèl ak kouch nan sèn nan
+    CompiledMesh zombie = obj_loader.ParseOBJFile("Assets/Models/zombie.obj");
+    TextureData ground_grass_tex = texture_engine.LoadTextureFromFile("Assets/Textures/terrain_grass.jpg");
 
-    // 2. RUN PASS 1: Render scene from the sunlight's eye to extract depth metrics
-    shadow_engine.ExecuteFirstPassDepthRender(house.model_name, sun.dir_x, sun.dir_y, sun.dir_z);
+    // 2. Chaje ak Kalkile vrè Heightmap Open World la nan nivo sistèm nan!
+    // Jenere yon gwo katab grid 512x512 piksèl altitid pou gwo zile a
+    TerrainMesh island_terrain = terrain_engine.GenerateTerrainFromHeightmap("Assets/Maps/island_heightmap.png", 512, 512);
+    terrain_engine.UploadTerrainToVRAM(island_terrain);
 
-    // 3. RUN PASS 2: Switch viewpoint to player camera, cross-examine data, and draw shadows!
-    shadow_engine.ExecuteSecondPassShadowSample();
+    // 3. Lanse kòmand desen mòn yo sou ekran an
+    terrain_engine.RenderTerrainMesh();
 
-    std::cout << "\n🎬 [GPU MAIN PIPELINE]: Swapping frame buffers with real-time shadow projection map loops..." << std::endl;
+    std::cout << "\n🎬 [DISPLAY BUFFER]: Swapping double frames. 3D Terrain world space rendered successfully!" << std::endl;
     renderer.SwapFrameBuffers();
 
     std::cout << "=======================================================" << std::endl;
