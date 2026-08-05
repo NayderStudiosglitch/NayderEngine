@@ -2,47 +2,69 @@
 #include <iostream>
 
 NayderOpenGLRenderer::NayderOpenGLRenderer() {
-    hardware_context.is_active = false;
-    hardware_context.active_vbo_id = 0;
+    window = nullptr;
 }
 
-void NayderOpenGLRenderer::CreateRenderWindow(int width, int height, std::string title) {
-    std::cout << "\n🪟 [WINDOW MANAGER]: Initializing platform graphic displays..." << std::endl;
-    std::cout << " -> Window Allocated: " << width << "x" << height << " Resolution | Title: \"" << title << "\"" << std::endl;
-    
-    // Initialize the true OpenGL Context state
-    hardware_context.is_active = true;
-    std::cout << " 🎮 [OPENGL CONTEXT]: Created " << hardware_context.gl_version << " -> ✅ STATUS: ACTIVE ON GPU" << std::endl;
-}
+bool NayderOpenGLRenderer::InitializeWindowContext(int width, int height, std::string title) {
+    screen_width = width;
+    screen_height = height;
+    window_title = title;
 
-void NayderOpenGLRenderer::CompileShaderPipeline(std::string vert_path, std::string frag_path) {
-    std::cout << "\n🔥 [SHADER COMPILER]: Streaming pipeline source arrays..." << std::endl;
-    std::cout << " -> Loading Vertex Shader:   " << vert_path << " ... [OK]" << std::endl;
-    std::cout << " -> Loading Fragment Shader: " << frag_path << " ... [OK]" << std::endl;
-    
-    active_shaders.compiled_successfully = true;
-    std::cout << " 🔺 [GPU PROGRAM LINKER]: Shader Pipeline linked successfully to VRAM! Pipeline IDs allocated." << std::endl;
-}
-
-void NayderOpenGLRenderer::SetCameraMatrixUniform(float cam_x, float cam_y, float cam_z) {
-    std::cout << " 🎥 [UNIFORM BINDING]: Pushing Camera View Matrix coordinates to Shaders: (" 
-              << cam_x << ", " << cam_y << ", " << cam_z << ")" << std::endl;
-}
-
-void NayderOpenGLRenderer::DrawPrimitiveTriangle() {
-    if (!hardware_context.is_active || !active_shaders.compiled_successfully) {
-        std::cout << " 🚫 [RENDER ERROR]: Cannot draw. Context or Shaders uninitialized!" << std::endl;
-        return;
+    // 1. INiSYALIZE GLFW LIBRERI A REYÈL
+    if (!glfwInit()) {
+        std::cerr << " 🚫 [OPENGL ERROR]: GLFW Initialization failed!" << std::endl;
+        return false;
     }
+
+    // Konfigire OpenGL vèsyon 3.3 Core Profile nan nivo kat grafik (GPU)
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    // 2. KREYE VRÈ FÈNÈT LA SOU EKRAAN AN
+    window = glfwCreateWindow(screen_width, screen_height, window_title.c_str(), nullptr, nullptr);
+    if (!window) {
+        std::cerr << " 🚫 [WINDOW ERROR]: Failed to create GLFW Real Window Graphic Box!" << std::endl;
+        glfwTerminate();
+        return false;
+    }
+
+    // Fè fenèt sa a tounen vrè kontèks OpenGL aktif pou kòd yo
+    glfwMakeContextCurrent(window);
     
-    hardware_context.active_vbo_id = 1047; // Simulated VBO register
-    std::cout << "\n📐 [RASTERIZER SYSTEM]: Binding Vertex Buffer Object ID: " << hardware_context.active_vbo_id << std::endl;
-    std::cout << "   ┌── Vertex 0: ( 0.0,  0.5, 0.0) -> Red Color Node" << std::endl;
-    std::cout << "   ├── Vertex 1: (-0.5, -0.5, 0.0) -> Green Color Node" << std::endl;
-    std::cout << "   └── Vertex 2: ( 0.5, -0.5, 0.0) -> Blue Color Node" << std::endl;
-    std::cout << " 🎨 [DRAW CALL]: glDrawArrays(GL_TRIANGLES, 0, 3) executed on hardware loop." << std::endl;
+    // Aktive V-Sync pou bloke FPS la selon ekran w (oswa 107 FPS koutim pita)
+    glfwSwapInterval(1);
+
+    std::cout << "\n🪟 [REAL WINDOW RUNTIME ACTIVE]:" << std::endl;
+    std::cout << " -> Window Node  : " << screen_width << "x" << screen_height << " HD Desktop Profile Mode" << std::endl;
+    std::cout << " -> GPU Context  : OpenGL 3.3 Core Profile initialized on VRAM cluster!" << std::endl;
+    std::cout << " -> STATUS       : ✅ Real Window successfully active on Chromebook screen!" << std::endl;
+
+    return true;
 }
 
-void NayderOpenGLRenderer::SwapFrameBuffers() {
-    std::cout << " 🔄 [DISPLAY ENGINE]: Buffer Swap completed. Frame Locked at 107 FPS (BOULE LWEN)." << std::endl;
+void NayderOpenGLRenderer::ClearScreenBuffer() {
+    // Vrè kòmand OpenGL k ap netwaye ekran an ak yon bèl koulè Cyberpunk nwa/violèt
+    glClearColor(0.05f, 0.05f, 0.08f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+void NayderOpenGLRenderer::HandleWindowPollEvents() {
+    glfwPollEvents(); // Koute evènman klavye/sourit nan nivo OS
+}
+
+bool NayderOpenGLRenderer::ShouldWindowClose() {
+    return glfwWindowShouldClose(window);
+}
+
+void NayderOpenGLRenderer::SwapHardwareBuffers() {
+    glfwSwapBuffers(window); // Vrè kòmand k ap chanje doub Frame-Buffers yo sou ekran an
+}
+
+void NayderOpenGLRenderer::TerminateGraphicsContext() {
+    if (window) {
+        glfwDestroyWindow(window);
+    }
+    glfwTerminate();
+    std::cout << "\n🧹 [ENGINE SHUTDOWN]: Graphics hardware device context terminated safely." << std::endl;
 }
