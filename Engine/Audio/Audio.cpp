@@ -1,48 +1,39 @@
 #include "Audio.h"
 #include <iostream>
-#include <cmath>
-
-NayderSpatialAudioEngine::NayderSpatialAudioEngine() {
-    // Initialized mixing desks
-}
-
-void NayderSpatialAudioEngine::InitializeAudioHardwareChannels() {
-    std::cout << "\n🔊 [AUDIO ENGINE]: Initializing hardware mixing channels and context..." << std::endl;
-    std::cout << " -> OpenAL Device Bridge / SDL_Audio Mixer layer initialized successfully." << std::endl;
-    std::cout << " -> Hardware Allocation: 32 Dynamic 3D Voice Channels registered on audio buffer cache." << std::endl;
-    std::cout << " ✅ [AUDIO DEVICE ACTIVE]: Hardware sound processing stack ready at 60Hz tick loops!" << std::endl;
-}
-
-void NayderSpatialAudioEngine::RegisterSoundEmitter(SoundSource3D source) {
-    std::cout << "  ├── [AUDIO REGISTERED]: Emitter file bound: \"" << source.clip_name 
-              << "\" | Default Vol: " << source.base_volume 
-              << " | Target Matrix Pitch: " << source.pitch_multiplier << "x" << std::endl;
-}
-
-void NayderSpatialAudioEngine::ProcessSpatialAudioMatrix(const SoundSource3D& source, const AudioListener& listener) {
-    // 1. Calculate 3D Euclidean Distance for Proximity Volume Attenuation
-    float delta_x = source.pos_x - listener.cam_x;
-    float delta_y = source.pos_y - listener.cam_y;
-    float delta_z = source.pos_z - listener.cam_z;
-    float distance = std::sqrt(delta_x*delta_x + delta_y*delta_y + delta_z*delta_z);
-
-    // Attenuation formula (Inverse proportional to distance distance drops)
-    float calculated_volume = source.base_volume / (1.0f + (0.1f * distance * distance));
-    if (calculated_volume > 1.0f) calculated_volume = 1.0f;
-    if (calculated_volume < 0.01f) calculated_volume = 0.0f; // Audio drops completely to cut threads
-
-    // 2. Calculate Stereo Pan Balance based on Azimuth Angles
-    float angle_to_source = std::atan2(delta_z, delta_x);
-    float pan_left = 0.5f - (0.5f * std::cos(angle_to_source));
-    float pan_right = 1.0f - pan_left;
-
-    std::cout << "\n🎧 [3D SPATIALIZATION CALCULATOR] - Tracking: \"" << source.clip_name << "\"" << std::endl;
-    std::cout << " -> Spatial Nodes  : Sound Source at (" << source.pos_x << ", " << source.pos_z << ") │ Player Cam at (" << listener.cam_x << ", " << listener.cam_z << ")" << std::endl;
-    std::cout << " -> Calculated Dist: " << distance << " meters away from Listener head node." << std::endl;
-    std::cout << " -> Mix Output Pot : Volume Amplitude: " << calculated_volume * 100 << "%%" << std::endl;
-    std::cout << " -> Pan Channel Bal: [ LEFT EAR: " << pan_left * 100 << "%%  │  RIGHT EAR: " << pan_right * 100 << "%% ]" << std::endl;
-    
-    if (distance < 5.0f && source.clip_name.find("Scream") != std::string::npos) {
-        std::cout << " ⚠️  [AUDIO ALERT]: DANGER CLOSE! Sudden frequency pitch shift to simulate Doppler rush!" << std::endl;
+#include <fstream>
+#include <vector>
+NayderAudioRuntime::NayderAudioRuntime() { pcm_handle = nullptr; }
+bool NayderAudioRuntime::InitializeAudioHardware() {
+    int rc = snd_pcm_open(&pcm_handle, device_name.c_str(), SND_PCM_STREAM_PLAYBACK, 0);
+    if (rc < 0) {
+        std::cerr << " 🚫 [ALSA AUDIO ERROR]: Initialization failed." << std::endl;
+        return false;
     }
+    rc = snd_pcm_set_params(pcm_handle, SND_PCM_FORMAT_S16_LE, SND_PCM_ACCESS_RW_INTERLEAVED, 2, 44100, 1, 500000);
+    if (rc < 0) {
+        std::cerr << " 🚫 [ALSA CONFIG ERROR]: Parameter setup failed." << std::endl;
+        return false;
+    }
+    std::cout << "\n🔊 [REAL AUDIO RUNTIME ACTIVE]: 44100Hz Stereo Channels Initialized Successfully!" << std::endl;
+    return true;
+}
+void NayderAudioRuntime::PlayRealWavFile(const std::string& wav_path) {
+    if (!pcm_handle) return;
+    std::ifstream file(wav_path, std::ios::binary);
+    if (!file) {
+        std::cerr << " 🚫 [AUDIO STREAM ERROR]: Cannot open file: " << wav_path << std::endl;
+        return;
+    }
+    file.seekg(44);
+    std::vector<char> buffer(1024 * 16);
+    std::cout << " 💥 [AUDIO HARDWARE TRIGGER]: Playing: " << wav_path << std::endl;
+    while (file.read(buffer.data(), buffer.size()) || file.gcount() > 0) {
+        std::streamsize bytes_read = file.gcount();
+        snd_pcm_sframes_t frames = snd_pcm_writei(pcm_handle, buffer.data(), bytes_read / 4);
+        if (frames < 0) frames = snd_pcm_prepare(pcm_handle);
+    }
+    file.close();
+}
+void NayderAudioRuntime::TerminateAudioContext() {
+    if (pcm_handle) { snd_pcm_drain(pcm_handle); snd_pcm_close(pcm_handle); }
 }
