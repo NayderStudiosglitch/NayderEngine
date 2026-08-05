@@ -4,30 +4,29 @@
 #include "../Renderer/Texture.cpp"
 #include "../Renderer/Lighting.cpp"
 #include "../Renderer/HUDRenderer.cpp"
+#include "../Editor/EditorWorkspace.cpp"
+#include "../Editor/GizmoEngine.cpp" // Interlocking real Gizmo transformation handles modularly
 #include "../Physics/Collision.cpp"
 #include "../Audio/Audio.cpp"
 #include "../AI/ZombieAI.cpp"
-#include "../AI/WaveDirector.cpp"
 #include "Input.cpp"
 #include "GameLoop.cpp"
 #include "WeaponSystem.cpp"
 #include "HealthSystem.cpp"
 #include <iostream>
 #include <vector>
-#include <cmath>
 
 typedef void (APIENTRY *PFNGLDRAWELEMENTSPROC) (GLenum mode, GLsizei count, GLenum type, const void* indices);
 typedef void (APIENTRY *PFNGLBINDVERTEXARRAYPROC) (GLuint array);
 
 int main() {
     std::cout << "\n=======================================================" << std::endl;
-    std::cout << "     [NEON FALL 17 v0.4.0] - DYNAMIC WAVE MODE" << std::endl;
+    std::cout << "     [NAYDER ENGINE v0.2.1] - INTERACTIVE GIZMO ENGINE" << std::endl;
     std::cout << "=======================================================" << std::endl;
-    std::cout << " 🏆 PRODUCTION GAMEPLAY PROGRESS MAP:" << std::endl;
-    std::cout << "  v0.2.0 Neon Fall 17 Alpha Build -> \342\234\205 COMPLETE" << std::endl;
-    std::cout << "  v0.3.0 Multiplayer Lobby Core   -> \342\234\205 COMPLETE" << std::endl;
-    std::cout << "  v0.4.0 Zombie Wave Mode Logic   -> \342\234\205 ONLINE PA OU" << std::endl;
-    std::cout << "  v0.5.0 Full Playtest Build Core -> \342\226\220 NEXT TARGET" << std::endl;
+    std::cout << " 🏆 DESKTOP WORKSPACE RECONSTRUCTION PROGRESS MAP:" << std::endl;
+    std::cout << "  v0.2.0 Nayder Engine Editor -> \342\234\205 OPERATIONAL" << std::endl;
+    std::cout << "  v0.2.1 Interactive Gizmos   -> \342\234\205 OPERATIONAL PA OU" << std::endl;
+    std::cout << "  v0.2.2 Scene Save/Load Core -> \342\226\220 NEXT" << std::endl;
     std::cout << "-------------------------------------------------------" << std::endl;
 
     NayderOpenGLRenderer engine_runtime;
@@ -36,16 +35,12 @@ int main() {
     NayderOBJLoader obj_loader;
     NayderTextureRuntime texture_system;
     NayderLightingRuntime lighting_system;
-    NayderZombieAIEngine zombie_ai;
-    NayderWeaponSystem combat_system;
-    NayderHealthSystem vital_system;
-    NayderWaveDirector game_director;
-    NayderHUDRenderer hud_engine;
-    CollisionSystem physics_system;
+    NayderEditorWorkspace editor_suite;
+    NayderGizmoEngine gizmo_engine;
     NayderAudioRuntime audio_system;
     NayderGameLoopClock engine_clock(107.0);
 
-    if (!engine_runtime.InitializeWindowContext(1366, 768, "Neon Fall 17 - Hardcore Wave Mode v0.4.0")) {
+    if (!engine_runtime.InitializeWindowContext(1366, 768, "Nayder Workspace Engine Editor v0.2.1")) {
         return -1;
     }
 
@@ -67,111 +62,72 @@ int main() {
     unsigned int VAO, VBO, EBO;
     obj_loader.UploadMeshToGPU(zombie_mesh, VAO, VBO, EBO);
 
-    EntityHealthPool player_vitals = { "NAYDER_01", 100, 100, 75, 75, false };
-    WeaponProfile primary_m4 = combat_system.EquipWeaponPreset(WeaponType::ASSAULT_RIFLE);
-    
-    WaveConfig current_session_waves = { 0, 0, 0, false, 0.0f };
-    BarricadeNode sandbag_gate = { "Choke_Point_Sandbags", 6.0f, 150, 150, false };
+    // Initial selected asset node metrics parameters
+    SelectedEntityData selected_node = { "Zombie_01", 16.5f, 0.0f, -2.4f, 0.0f, 45.0f, 0.0f, 1.2f, "zombie.obj" };
+    GizmoMode current_active_tool = GizmoMode::MOVE_TRANSLATE;
 
-    std::vector<ZombieEntityNode> dynamic_horde;
-    game_director.InitializeNewWave(current_session_waves, dynamic_horde);
+    bool key_6_released = true, key_7_released = true, key_8_released = true;
 
-    BoxCollider player_collider = {0.0f, 0.0f, 0.0f, 1.0f, 2.0f, 1.0f};
-    PFNGLBINDVERTEXARRAYPROC  glBindVertexArray_ptr = (PFNGLBINDVERTEXARRAYPROC)glfwGetProcAddress("glBindVertexArray");
-    
-    bool space_was_released = true;
-    int current_wave_kills = 0;
+    std::cout << "\n🚀 [GIZMO SUITE INITIALIZED - HOTKEYS ACTIVE]:" << std::endl;
+    std::cout << " -> Tap key [6] on keyboard to initialize MOVE handles." << std::endl;
+    std::cout << " -> Tap key [7] on keyboard to initialize ROTATE handles." << std::endl;
+    std::cout << " -> Tap key [8] on keyboard to initialize SCALE handles." << std::endl;
+    std::cout << " -> HOLD [W] key to actively apply transform calculations onto the asset!" << std::endl;
 
-    std::cout << "\n🎮 [WAVE SIMULATOR DEPLOYED] -> CHOKE POINT DEFENSE COMMENCING!" << std::endl;
-
-    while (!engine_runtime.ShouldWindowClose() && !player_vitals.is_dead) {
+    // MASTER ENGINE RUNTIME TICK WORKSPACE LOOP
+    while (!engine_runtime.ShouldWindowClose()) {
         engine_clock.TickClockStart();
         float dt = engine_clock.GetDeltaTime();
 
-        if (!current_session_waves.wave_in_progress) {
-            current_session_waves.next_wave_cooldown -= dt;
-            if (current_session_waves.next_wave_cooldown <= 0.0f) {
-                current_wave_kills = 0;
-                game_director.InitializeNewWave(current_session_waves, dynamic_horde);
-            }
-        }
+        // 1. MONITOR HARDWARE OS INPUT INTERRUPTS FOR GIZMO SELECTIONS
+        if (NayderInputSystem::key_states[GLFW_KEY_6]) {
+            if (key_6_released) { current_active_tool = GizmoMode::MOVE_TRANSLATE; gizmo_engine.SetActiveGizmoMode(current_active_tool); key_6_released = false; }
+        } else { key_6_released = true; }
 
+        if (NayderInputSystem::key_states[GLFW_KEY_7]) {
+            if (key_7_released) { current_active_tool = GizmoMode::ROTATE_DEG; gizmo_engine.SetActiveGizmoMode(current_active_tool); key_7_released = false; }
+        } else { key_7_released = true; }
+
+        if (NayderInputSystem::key_states[GLFW_KEY_8]) {
+            if (key_8_released) { current_active_tool = GizmoMode::SCALE_UNIFORM; gizmo_engine.SetActiveGizmoMode(current_active_tool); key_8_released = false; }
+        } else { key_8_released = true; }
+
+        // 2. APPLY TRANSFORMATIONS MODIFICATIONS BASED ON ACTIVE SELECTION VALUE
+        float transformation_input = 0.0f;
         if (NayderInputSystem::key_states[GLFW_KEY_W]) {
-            player_collider.x += 4.5f * dt;
+            transformation_input = 1.0f; // Actively feeding positive force vectors
         }
 
-        if (current_session_waves.wave_in_progress) {
-            zombie_ai.ProcessHordePathfindingTick(dynamic_horde, player_collider.x, dt);
-            
-            for (size_t i = 0; i < dynamic_horde.size(); ++i) {
-                if (!sandbag_gate.is_destroyed) {
-                    game_director.EvaluateBarricadeIntersections(sandbag_gate, dynamic_horde[i].pos_x, dynamic_horde[i].attack_damage, dt);
-                    if (dynamic_horde[i].pos_x <= sandbag_gate.pos_x + 1.0f) {
-                        dynamic_horde[i].pos_x = sandbag_gate.pos_x + 1.0f;
-                    }
-                }
-                
-                if (sandbag_gate.is_destroyed) {
-                    float dist = std::abs(dynamic_horde[i].pos_x - player_collider.x);
-                    if (dist <= 1.8f) {
-                        vital_system.ApplyDamageToPlayer(player_vitals, dynamic_horde[i].attack_damage);
-                    }
-                }
-            }
+        if (transformation_input != 0.0f) {
+            gizmo_engine.ApplyGizmoTransformDelta(current_active_tool, transformation_input, selected_node.pos_x, selected_node.rot_y, selected_node.scale, dt);
         }
 
-        if (NayderInputSystem::key_states[GLFW_KEY_SPACE] && current_session_waves.wave_in_progress) {
-            if (space_was_released) {
-                if (combat_system.PullTriggerLoop(primary_m4, dt)) {
-                    audio_system.PlayRealWavFile("Assets/Audio/weapon_fire.wav");
-                    current_wave_kills++;
-                    std::cout << " 🎯 [COMBAT RECORD]: Kill Progress: " << current_wave_kills << " / " << current_session_waves.total_zombies_this_wave << std::endl;
-                    game_director.EvaluateWaveVictoryConditions(current_session_waves, current_wave_kills);
-                }
-                space_was_released = false;
-            }
-        } else {
-            space_was_released = true;
-        }
-
+        // Draw passes stage scripts
         engine_runtime.ClearScreenBuffer();
         shader_compiler.UseShaderProgram();
 
+        // Pass 1: Viewport renders
         lighting_system.SetDirectionalSunUniforms(shader_compiler.ProgramID, -0.5f, -1.0f, -0.2f, 1.0f, 0.55f, 0.2f);
-        lighting_system.UpdateCameraViewPositionUniform(shader_compiler.ProgramID, player_collider.x, 2.0f, -5.0f);
+        lighting_system.UpdateCameraViewPositionUniform(shader_compiler.ProgramID, 0.0f, 2.0f, -5.0f);
         texture_system.BindTextureUnit(0);
 
-        if (glBindVertexArray_ptr) { 
-            glBindVertexArray_ptr(VAO); 
-        }
-        
-        if (current_session_waves.wave_in_progress) {
-            for (size_t i = 0; i < dynamic_horde.size(); ++i) {
-                glDrawElements(GL_TRIANGLES, zombie_mesh.total_indices, GL_UNSIGNED_INT, 0);
-            }
-        }
+        PFNGLBINDVERTEXARRAYPROC glBindVertexArray_ptr = (PFNGLBINDVERTEXARRAYPROC)glfwGetProcAddress("glBindVertexArray");
+        if (glBindVertexArray_ptr) { glBindVertexArray_ptr(VAO); }
+        glDrawElements(GL_TRIANGLES, zombie_mesh.total_indices, GL_UNSIGNED_INT, 0);
 
-        hud_engine.SetOrthographicProjection();
-        
-        HUDLiveStats overlay_packet;
-        overlay_packet.current_hp = player_vitals.current_hp;
-        overlay_packet.max_hp = player_vitals.max_hp;
-        overlay_packet.current_armor = player_vitals.current_armor;
-        overlay_packet.max_armor = player_vitals.max_armor;
-        overlay_packet.clip_ammo = primary_m4.current_clip;
-        overlay_packet.max_clip = primary_m4.clip_capacity;
-        overlay_packet.reserve_ammo = primary_m4.reserve_ammo;
-        overlay_packet.total_kills = current_wave_kills;
-        overlay_packet.current_fps = engine_clock.GetCurrentFPS();
-        
-        if (!current_session_waves.wave_in_progress) {
-            overlay_packet.objective = "NEXT WAVE INCOMING IN: " + std::to_string(static_cast<int>(current_session_waves.next_wave_cooldown)) + "s";
-        } else {
-            overlay_packet.objective = "WAVE " + std::to_string(current_session_waves.current_wave) + " │ BARRICADE: " + (sandbag_gate.is_destroyed ? "BREACHED" : std::to_string(sandbag_gate.current_durability) + " HP");
-        }
+        // 3. SUBMIT REAL-TIME GIZMO LINE DRAW CALCULATIONS INTO THE INTERRUPT PIPELINE
+        gizmo_engine.RenderActiveGizmoHandles(selected_node.pos_x, selected_node.pos_y, selected_node.pos_z);
 
-        hud_engine.RenderHUDDashboard(overlay_packet);
-        hud_engine.RestorePerspectiveProjection();
+        // Pass 2: Overwrite split layout dashboards
+        editor_suite.SetEditorLayoutMatrix();
+        editor_suite.DrawSceneHierarchyPanel();
+        editor_suite.DrawCentralViewportPanel();
+        
+        // Update the inspector display title dynamically to trace active tools!
+        selected_node.mesh_source = "zombie.obj [" + gizmo_engine.GetCurrentToolLabel() + "]";
+        editor_suite.DrawInspectorPanel(selected_node);
+        
+        editor_suite.DrawContentBrowserPanel();
 
         engine_runtime.SwapHardwareBuffers();
         engine_clock.SynchronizeFrameRateLock();
@@ -180,6 +136,5 @@ int main() {
 
     audio_system.TerminateAudioContext();
     engine_runtime.TerminateGraphicsContext();
-    std::cout << "=======================================================" << std::endl;
     return 0;
 }
