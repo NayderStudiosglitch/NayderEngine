@@ -1,45 +1,108 @@
 #include "HUDRenderer.h"
 #include <iostream>
+#include <GLFW/glfw3.h>
 
 NayderHUDRenderer::NayderHUDRenderer() {}
 
 void NayderHUDRenderer::SetOrthographicProjection() {
-    // Overriding projection parameters to 2D Screen Space bypassing 3D depth buffers
-    std::cout << "\n🎛️  [HUD RENDER MATRIX]: Overriding projection parameters to 2D Orthographic Mode..." << std::endl;
+    // 🎛️ Reset projection matrix vectors to enforce 2D screen coordinate parameters
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glOrtho(0, 1366, 0, 768, -1, 1);
+    
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+    
+    glDisable(GL_DEPTH_TEST); // Disable depth buffering so UI overlays sit on top of 3D meshes
 }
 
 void NayderHUDRenderer::RenderHUDDashboard(const HUDLiveStats& stats) {
-    // Calculate the absolute viewport center for the crosshair layout
-    int center_x = 1366 / 2;
-    int center_y = 768 / 2;
+    // =============================================================================
+    // 🎯 MODULE v0.3.7: NATIVE GRAPHICAL CROSSHAIR DRAW (Screen Center)
+    // =============================================================================
+    float cx = 1366.0f / 2.0f;
+    float cy = 768.0f / 2.0f;
+    float size = 10.0f;
 
-    std::cout << "📺 [HUD DASHBOARD REPLICATION]: Printing live screen interface layout arrays..." << std::endl;
-    std::cout << " +----------------------------------------------------------------------+" << std::endl;
-    std::cout << " |  FPS: " << stats.current_fps << " Lock (BOULE LWEN)  │  OBJECTIVE: " << stats.objective << "  |" << std::endl;
-    std::cout << " +----------------------------------------------------------------------+" << std::endl;
+    glDisable(GL_TEXTURE_2D);
+    glColor3f(1.0f, 0.0f, 0.0f); // Bright Red Crosshair Reticle
+    glLineWidth(2.0f);
+    glBegin(GL_LINES);
+        // Horizontal line
+        glVertex2f(cx - size, cy);
+        glVertex2f(cx + size, cy);
+        // Vertical line
+        glVertex2f(cx, cy - size);
+        glVertex2f(cx, cy + size);
+    glEnd();
+
+    // =============================================================================
+    // 🟩 NATIVE GRAPHICAL HEALTH BAR POLYGON RASTERIZATION
+    // =============================================================================
+    float bar_x = 50.0f;
+    float health_y = 50.0f;
+    float bar_height = 20.0f;
+    float max_bar_width = 200.0f;
     
-    // Compute HP visual block increments
-    std::cout << " |  HP    : [";
-    int hp_blocks = stats.current_hp / 10;
-    for (int i = 0; i < 12; ++i) { if (i < hp_blocks) std::cout << "█"; else std::cout << "░"; }
-    std::cout << "] " << stats.current_hp << " / " << stats.max_hp << " HP                          |" << std::endl;
+    // Scale length multiplier live based on player health percentage
+    float health_pct = static_cast<float>(stats.current_hp) / static_cast<float>(stats.max_hp);
+    float active_health_width = max_bar_width * health_pct;
 
-    // Compute Armor visual block increments
-    std::cout << " |  ARMOR : [";
-    int armor_blocks = stats.current_armor / 10;
-    for (int i = 0; i < 10; ++i) { if (i < armor_blocks) std::cout << "█"; else std::cout << "░"; }
-    std::cout << "] " << stats.current_armor << " / " << stats.max_armor << " AR                          |" << std::endl;
+    // Draw Health Bar Background (Dark Matte)
+    glColor3f(0.1f, 0.1f, 0.1f);
+    glBegin(GL_QUADS);
+        glVertex2f(bar_x, health_y);
+        glVertex2f(bar_x + max_bar_width, health_y);
+        glVertex2f(bar_x + max_bar_width, health_y + bar_height);
+        glVertex2f(bar_x, health_y + bar_height);
+    glEnd();
 
-    std::cout << " +----------------------------------------------------------------------+" << std::endl;
-    std::cout << " |  AMMO  : " << stats.clip_ammo << " / " << stats.reserve_ammo << " (AUTO)   │  ZOMBIES ELIMINATED: x" << stats.total_kills << "            |" << std::endl;
-    std::cout << " +----------------------------------------------------------------------+" << std::endl;
+    // Draw Active Health Bar Foreground (Neon Green)
+    glColor3f(0.0f, 1.0f, 0.3f);
+    glBegin(GL_QUADS);
+        glVertex2f(bar_x, health_y);
+        glVertex2f(bar_x + active_health_width, health_y);
+        glVertex2f(bar_x + active_health_width, health_y + bar_height);
+        glVertex2f(bar_x, health_y + bar_height);
+    glEnd();
 
-    // v0.1.6 CENTRAL COMBAT CROSSHAIR CALCULATOR
-    std::cout << "\n🎯 [CROSSHAIR SYSTEM - v0.1.6]:" << std::endl;
-    std::cout << " ├── Viewport Midpoint Node Locked at Coordinate: (" << center_x << ", " << center_y << ")" << std::endl;
-    std::cout << " └── Raycast Target Crosshair Projected ->      [ + ]" << std::endl;
+    // =============================================================================
+    // 🟦 NATIVE GRAPHICAL ARMOR BAR POLYGON RASTERIZATION
+    // =============================================================================
+    float armor_y = 20.0f;
+    float armor_pct = static_cast<float>(stats.current_armor) / static_cast<float>(stats.max_armor);
+    float active_armor_width = max_bar_width * armor_pct;
+
+    // Draw Armor Bar Background (Dark Matte)
+    glColor3f(0.1f, 0.1f, 0.1f);
+    glBegin(GL_QUADS);
+        glVertex2f(bar_x, armor_y);
+        glVertex2f(bar_x + max_bar_width, armor_y);
+        glVertex2f(bar_x + max_bar_width, armor_y + bar_height);
+        glVertex2f(bar_x, armor_y + bar_height);
+    glEnd();
+
+    // Draw Active Armor Bar Foreground (Cyan Blue)
+    glColor3f(0.0f, 0.7f, 1.0f);
+    glBegin(GL_QUADS);
+        glVertex2f(bar_x, armor_y);
+        glVertex2f(bar_x + active_armor_width, armor_y);
+        glVertex2f(bar_x + active_armor_width, armor_y + bar_height);
+        glVertex2f(bar_x, armor_y + bar_height);
+    glEnd();
+
+    // Fallback status prints to ensure logging cycles trace metrics seamlessly
+    std::cout << " 📺 [GRAPHICAL HUD MATRIX TICK]: Crosshair and Vertex Bars rasterized cleanly to display context! FPS: " << stats.current_fps << std::endl;
 }
 
 void NayderHUDRenderer::RestorePerspectiveProjection() {
-    std::cout << "🔄 [HUD RENDER MATRIX]: Popping 2D frames. Perspective depth buffers restored." << std::endl;
+    glEnable(GL_DEPTH_TEST);
+    
+    // Pop matrices to completely restore 3D perspective camera space view attributes
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
 }
