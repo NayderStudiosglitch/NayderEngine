@@ -1,8 +1,10 @@
 #version 330 core
-in vec3 ourColor;
 out vec4 FragColor;
 
+in vec2 TexCoord;
+uniform sampler2D texture_sampler; // Active hardware sampler mapping texture units
+
 void main() {
-    // Outputs the interpolated vertex colors perfectly
-    FragColor = vec4(ourColor, 1.0);
+    // Samples the active bound VRAM image bytes dynamically using UV inputs
+    FragColor = texture(texture_sampler, TexCoord);
 }
